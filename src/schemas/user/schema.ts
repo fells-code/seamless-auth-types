@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IsoDate } from '../shared';
+import { IsoDate } from '../../shared';
 
 export const RoleSchema = z.string().regex(/^(?!.*[_/\\\s])[A-Za-z0-9-]{1,31}$/);
 
@@ -31,6 +31,6 @@ export const UpdateUserSchema = z
     phone: z.string().min(5).optional(),
     emailVerified: z.boolean().optional(),
     phoneVerified: z.boolean().optional(),
-    roles: z.array(RoleSchema).min(1),
+    roles: z.array(RoleSchema).min(1).optional(),
   })
   .strict();

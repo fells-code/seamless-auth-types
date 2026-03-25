@@ -1,17 +1,30 @@
 import z from 'zod';
-import { IsoDate } from '../shared';
+import { IsoDate } from '../../shared';
+
+const TransportSchema = z.enum(['usb', 'ble', 'nfc', 'internal']);
+
+const DeviceTypeSchema = z.enum(['singleDevice', 'multiDevice']);
 
 export const CredentialSchema = z.object({
   id: z.string(),
-  transports: z.array(z.string()).nullable().optional(),
-  deviceType: z.string().nullable().optional(),
-  backedUp: z.boolean().nullable().optional(),
+  userId: z.string(),
+
+  publicKey: z.string(),
   counter: z.number(),
+
+  transports: z.array(TransportSchema).optional(),
+
+  deviceType: DeviceTypeSchema.optional(),
+
+  backedUp: z.boolean(),
+
   friendlyName: z.string().nullable().optional(),
   lastUsedAt: IsoDate.nullable().optional(),
+
   platform: z.string().nullable().optional(),
   browser: z.string().nullable().optional(),
   deviceInfo: z.string().nullable().optional(),
+
   createdAt: IsoDate,
   updatedAt: IsoDate.optional(),
 });
