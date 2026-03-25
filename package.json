@@ -1,6 +1,6 @@
 {
   "name": "@seamless-auth/types",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Shared TypeScript types and Zod schemas for SeamlessAuth.",
   "author": "Fells Code, LLC",
   "license": "AGPL-3.0",
