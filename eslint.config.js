@@ -4,10 +4,12 @@ import prettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', '*.config.ts'],
+    ignores: ['dist', 'node_modules', 'coverage', '*.config.*'],
   },
+
   {
-    files: ['**/*.ts'],
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/*.test.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -18,16 +20,24 @@ export default [
       '@typescript-eslint': tseslint,
     },
     rules: {
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error'],
-
+      '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
-
-      'no-console': 'warn',
-
-      '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
+  {
+    files: ['src/**/*.test.ts'],
+    languageOptions: {
+      parser: tsParser,
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'error',
+      // no type-aware rules here
+    },
+  },
+
   prettier,
 ];
