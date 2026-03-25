@@ -1,0 +1,75 @@
+{
+  "name": "@seamless-auth/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types and Zod schemas for SeamlessAuth.",
+  "author": "Fells Code, LLC",
+  "license": "AGPL-3.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fells-code/seamless-auth-types.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fells-code/seamless-auth-types/issues"
+  },
+  "homepage": "https://github.com/fells-code/seamless-auth-types#readme",
+  "keywords": [
+    "typescript",
+    "zod",
+    "schemas",
+    "authentication",
+    "webauthn",
+    "passkeys",
+    "seamless-auth"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
