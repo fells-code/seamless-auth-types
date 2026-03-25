@@ -1,5 +1,5 @@
 import z from 'zod';
-import { IsoDate } from '../../shared';
+import { IsoDate } from '../../shared.js';
 
 export const AuthEventSchema = z.object({
   id: z.string(),

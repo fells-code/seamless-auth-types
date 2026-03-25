@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { UserSchema, CreateUserSchema, UpdateUserSchema } from './schema';
+import { UserSchema, CreateUserSchema, UpdateUserSchema } from './schema.js';
 
 const now = new Date().toISOString();
 

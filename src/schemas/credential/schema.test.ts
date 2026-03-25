@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CredentialSchema } from './schema';
+import { CredentialSchema } from './schema.js';
 
 const now = new Date().toISOString();
 

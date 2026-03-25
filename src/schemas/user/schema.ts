@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IsoDate } from '../../shared';
+import { IsoDate } from '../../shared.js';
 
 export const RoleSchema = z.string().regex(/^(?!.*[_/\\\s])[A-Za-z0-9-]{1,31}$/);
 

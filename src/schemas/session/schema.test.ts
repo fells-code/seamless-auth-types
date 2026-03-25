@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SessionSchema } from './schema';
+import { SessionSchema } from './schema.js';
 
 const now = new Date().toISOString();
 const later = new Date(Date.now() + 1000 * 60 * 60).toISOString();
