@@ -57,6 +57,15 @@ describe('UserSchema', () => {
     ).toThrow();
   });
 
+  it('allows scoped role format', () => {
+    expect(() =>
+      UserSchema.parse({
+        ...baseUser,
+        roles: ['admin:read', 'admin:write'],
+      }),
+    ).not.toThrow();
+  });
+
   it('allows nullable lastLogin', () => {
     expect(() =>
       UserSchema.parse({
@@ -82,6 +91,16 @@ describe('CreateUserSchema', () => {
         roles: ['admin'],
       }),
     ).not.toThrow();
+  });
+
+  it('parses scoped roles', () => {
+    const parsed = CreateUserSchema.parse({
+      email: 'test@example.com',
+      phone: '1234567890',
+      roles: ['admin:read'],
+    });
+
+    expect(parsed.roles).toEqual(['admin:read']);
   });
 
   it('fails if roles are empty', () => {
@@ -146,6 +165,14 @@ describe('UpdateUserSchema', () => {
         roles: ['invalid role'],
       }),
     ).toThrow();
+  });
+
+  it('parses scoped role updates', () => {
+    const parsed = UpdateUserSchema.parse({
+      roles: ['admin:write'],
+    });
+
+    expect(parsed.roles).toEqual(['admin:write']);
   });
 
   it('fails on unknown fields due to strict()', () => {
