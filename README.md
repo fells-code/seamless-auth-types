@@ -42,6 +42,9 @@ import { UserSchema } from '@seamless-auth/types';
 const user = UserSchema.parse(data);
 ```
 
+User role schemas accept plain roles such as `admin` and colon-separated scoped roles such as
+`admin:read` and `admin:write`. Whitespace, underscores, slashes, and backslashes are rejected.
+
 ### Infer types
 
 ```ts

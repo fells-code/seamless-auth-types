@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { IsoDate } from '../shared';
+import { IsoDate } from '../../shared.js';
 
-export const RoleSchema = z.string().regex(/^(?!.*[_/\\\s])[A-Za-z0-9-]{1,31}$/);
+export const RoleSchema = z
+  .string()
+  .trim()
+  .regex(/^(?!.*[_/\\\s])(?=.{1,80}$)[A-Za-z0-9-]+(?::[A-Za-z0-9-]+)*$/);
 
 export const UserSchema = z.object({
   id: z.uuid(),
@@ -31,6 +34,6 @@ export const UpdateUserSchema = z
     phone: z.string().min(5).optional(),
     emailVerified: z.boolean().optional(),
     phoneVerified: z.boolean().optional(),
-    roles: z.array(RoleSchema).min(1),
+    roles: z.array(RoleSchema).min(1).optional(),
   })
   .strict();
