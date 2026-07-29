@@ -1,11 +1,15 @@
 name: CI
 
 on:
+  pull_request:
+    branches: ['**']
   push:
     branches:
       - main
       - dev
-  pull_request:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -13,17 +17,23 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint, typecheck, build
+    name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
@@ -38,5 +48,17 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Run tests with coverage
+        run: npm run coverage
+
       - name: Build
         run: npm run build
+
+      - name: Verify package contents
+        run: npm run check-npm-build
+
+      - name: Upload coverage reports to Codecov
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.node-version == 24
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -97,17 +97,22 @@ src/
 
 ## Tooling
 
-| Task       | Command             |
-| ---------- | ------------------- |
-| Build      | `npm run build`     |
-| Typecheck  | `npm run typecheck` |
-| Lint       | `npm run lint`      |
-| Format     | `npm run format`    |
-| Unit tests | `npm test` (vitest) |
+| Task          | Command                   |
+| ------------- | ------------------------- |
+| Build         | `npm run build`           |
+| Typecheck     | `npm run typecheck`       |
+| Lint          | `npm run lint`            |
+| Format        | `npm run format`          |
+| Unit tests    | `npm test` (vitest)       |
+| Coverage      | `npm run coverage`        |
+| Add changeset | `npm run changeset`       |
+| Pack preview  | `npm run check-npm-build` |
 
 - Node version is pinned by `.nvmrc` (Node 24); CI reads it via
   `node-version-file`. Run `nvm use` locally to match.
-- commitlint enforces Conventional Commits.
+- commitlint enforces Conventional Commits; husky runs lint-staged on commit.
+- Releases go through Changesets. See `RELEASES.md` for the flow and for how to
+  pick the bump.
 
 ## Safe Change Workflow
 
@@ -117,3 +122,5 @@ src/
 4. Run `npm run typecheck`, `npm test`, `npm run lint`, and `npm run build`.
 5. Treat any change to an existing schema as potentially breaking: note it in the
    PR and consider the version bump that downstream consumers will need.
+6. Run `npm run changeset` and describe the change for consumers. A PR that
+   touches `src/` without a changeset ships nothing.
