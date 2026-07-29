@@ -8,6 +8,8 @@ export const UserIdParamSchema = z.object({
   userId: z.string(),
 });
 
+export type UserIdParam = z.infer<typeof UserIdParamSchema>;
+
 /**
  * What an operator clears when a user replaces a lost device. Each step is
  * opt-out rather than opt-in so a hurried recovery does not leave the old

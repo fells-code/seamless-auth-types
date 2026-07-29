@@ -29,3 +29,5 @@ export const InvalidPayloadResponseSchema = z.object({
 export type InvalidPayloadResponse = z.infer<typeof InvalidPayloadResponseSchema>;
 
 export const MetadataSchema = z.record(z.string(), z.unknown()).nullable().optional();
+
+export type Metadata = z.infer<typeof MetadataSchema>;

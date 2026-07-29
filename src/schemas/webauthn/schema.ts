@@ -22,12 +22,16 @@ export const WebAuthnRegisterStartQuerySchema = z.object({
   requirePrf: BooleanQuerySchema,
 });
 
+export type WebAuthnRegisterStartQuery = z.infer<typeof WebAuthnRegisterStartQuerySchema>;
+
 export const WebAuthnAssertionStartSchema = z
   .object({
     credentialId: z.string().optional(),
     prf: WebAuthnPrfRequestSchema.optional(),
   })
   .default({});
+
+export type WebAuthnAssertionStart = z.infer<typeof WebAuthnAssertionStartSchema>;
 
 export const WebAuthnCredentialMetadataSchema = z.object({
   friendlyName: z.string().optional(),
@@ -44,15 +48,21 @@ export const WebAuthnRegisterFinishSchema = z.object({
   metadata: WebAuthnCredentialMetadataSchema.optional(),
 });
 
+export type WebAuthnRegisterFinish = z.infer<typeof WebAuthnRegisterFinishSchema>;
+
 export const WebAuthnLoginFinishSchema = z.object({
   assertionResponse: z.record(z.string(), z.unknown()),
 });
+
+export type WebAuthnLoginFinish = z.infer<typeof WebAuthnLoginFinishSchema>;
 
 /**
  * The credential creation and request options are passed through to the browser
  * verbatim, so they are not narrowed here.
  */
 export const WebAuthnChallengeSchema = z.record(z.string(), z.unknown());
+
+export type WebAuthnChallenge = z.infer<typeof WebAuthnChallengeSchema>;
 
 export const WebAuthnTokenSuccessSchema = z.object({
   message: z.string(),

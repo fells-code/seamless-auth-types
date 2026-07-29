@@ -6,9 +6,13 @@ export const OrganizationIdParamSchema = z.object({
   organizationId: z.uuid(),
 });
 
+export type OrganizationIdParam = z.infer<typeof OrganizationIdParamSchema>;
+
 export const OrganizationMemberParamSchema = OrganizationIdParamSchema.extend({
   userId: z.uuid(),
 });
+
+export type OrganizationMemberParam = z.infer<typeof OrganizationMemberParamSchema>;
 
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -87,6 +91,8 @@ export const OrganizationEnvelopeResponseSchema = z.object({
   organization: OrganizationSchema,
 });
 
+export type OrganizationEnvelopeResponse = z.infer<typeof OrganizationEnvelopeResponseSchema>;
+
 export const OrganizationListResponseSchema = z.object({
   organizations: z.array(OrganizationSchema),
   activeOrganizationId: z.string().nullable(),
@@ -99,14 +105,22 @@ export const AdminOrganizationListResponseSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 
+export type AdminOrganizationListResponse = z.infer<typeof AdminOrganizationListResponseSchema>;
+
 export const OrganizationMembersResponseSchema = z.object({
   members: z.array(OrganizationMembershipSchema),
   total: z.number().int().nonnegative(),
 });
 
+export type OrganizationMembersResponse = z.infer<typeof OrganizationMembersResponseSchema>;
+
 export const OrganizationMembershipEnvelopeResponseSchema = z.object({
   membership: OrganizationMembershipSchema,
 });
+
+export type OrganizationMembershipEnvelopeResponse = z.infer<
+  typeof OrganizationMembershipEnvelopeResponseSchema
+>;
 
 export const OrganizationSwitchResponseSchema = z.object({
   message: z.string(),

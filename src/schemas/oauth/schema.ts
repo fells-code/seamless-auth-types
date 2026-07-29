@@ -6,6 +6,8 @@ export const OAuthProviderParamSchema = z.object({
   providerId: OAuthProviderIdSchema,
 });
 
+export type OAuthProviderParam = z.infer<typeof OAuthProviderParamSchema>;
+
 /** A provider as an unauthenticated client may see it: no client or secret material. */
 export const PublicOAuthProviderSchema = z.object({
   id: z.string(),
@@ -18,6 +20,8 @@ export type PublicOAuthProvider = z.infer<typeof PublicOAuthProviderSchema>;
 export const OAuthProvidersResponseSchema = z.object({
   providers: z.array(PublicOAuthProviderSchema),
 });
+
+export type OAuthProvidersResponse = z.infer<typeof OAuthProvidersResponseSchema>;
 
 export const StartOAuthLoginRequestSchema = z.object({
   redirectUri: z.url().optional(),
@@ -44,6 +48,8 @@ export type FinishOAuthLoginRequest = z.infer<typeof FinishOAuthLoginRequestSche
 export const OAuthLoginSuccessResponseSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
 });
+
+export type OAuthLoginSuccessResponse = z.infer<typeof OAuthLoginSuccessResponseSchema>;
 
 export const OAUTH_ERROR_CODES = [
   'oauth_missing_email',

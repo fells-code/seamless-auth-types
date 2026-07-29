@@ -26,8 +26,13 @@ export type LoginSuccessResponse = z.infer<typeof LoginSuccessResponseSchema>;
 
 export const RefreshTokenRequestSchema = z.object({});
 
+export type RefreshTokenRequest = z.infer<typeof RefreshTokenRequestSchema>;
+
 /** @deprecated Use {@link RefreshTokenRequestSchema}. */
 export const RefreshRequestSchema = RefreshTokenRequestSchema;
+
+/** @deprecated Use {@link RefreshTokenRequest}. */
+export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;
 
 /**
  * The token envelope every completed authentication returns, whatever the
@@ -76,28 +81,40 @@ export const RegisterPhoneRequestSchema = z.object({
   phone: z.string(),
 });
 
+export type RegisterPhoneRequest = z.infer<typeof RegisterPhoneRequestSchema>;
+
 export const RegisterPhoneSuccessSchema = z.object({
   message: z.string(),
   phone: z.string(),
   delivery: AuthDeliverySchema.optional(),
 });
 
+export type RegisterPhoneSuccess = z.infer<typeof RegisterPhoneSuccessSchema>;
+
 export const VerifyOTPRequestSchema = z.object({
   verificationToken: z.string(),
 });
+
+export type VerifyOTPRequest = z.infer<typeof VerifyOTPRequestSchema>;
 
 export const OTPVerifyTokenSuccessSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
 });
 
+export type OTPVerifyTokenSuccess = z.infer<typeof OTPVerifyTokenSuccessSchema>;
+
 export const MagicLinkVerifyParamsSchema = z.object({
   token: z.string(),
 });
+
+export type MagicLinkVerifyParams = z.infer<typeof MagicLinkVerifyParamsSchema>;
 
 export const MagicLinkPollSuccessSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
   organizationId: true,
 });
+
+export type MagicLinkPollSuccess = z.infer<typeof MagicLinkPollSuccessSchema>;
 
 /** Body for endpoints that acknowledge a request and may hand back a delivery. */
 export const AuthMessageResponseSchema = z.object({
