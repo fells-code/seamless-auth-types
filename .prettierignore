@@ -1,3 +1,6 @@
 dist
 node_modules
 coverage
+
+# Written by changesets; leave its formatting alone so a release cannot fail format:check.
+CHANGELOG.md
