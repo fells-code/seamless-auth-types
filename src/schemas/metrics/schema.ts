@@ -55,9 +55,13 @@ export const AuthEventSummaryItemSchema = z.object({
   count: z.number(),
 });
 
+export type AuthEventSummaryItem = z.infer<typeof AuthEventSummaryItemSchema>;
+
 export const AuthEventSummaryResponseSchema = z.object({
   summary: z.array(AuthEventSummaryItemSchema),
 });
+
+export type AuthEventSummaryResponse = z.infer<typeof AuthEventSummaryResponseSchema>;
 
 export const AuthEventTimeseriesPointSchema = z.object({
   bucket: z.string(),
@@ -71,11 +75,15 @@ export const AuthEventTimeseriesResponseSchema = z.object({
   timeseries: z.array(AuthEventTimeseriesPointSchema),
 });
 
+export type AuthEventTimeseriesResponse = z.infer<typeof AuthEventTimeseriesResponseSchema>;
+
 export const LoginStatsResponseSchema = z.object({
   success: z.number(),
   failed: z.number(),
   successRate: z.number(),
 });
+
+export type LoginStatsResponse = z.infer<typeof LoginStatsResponseSchema>;
 
 /**
  * Anomaly rows come straight out of the event store, where a partially written

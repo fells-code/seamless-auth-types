@@ -10,3 +10,6 @@ export type RoleName = z.infer<typeof RoleNameSchema>;
 
 /** @deprecated Use {@link RoleNameSchema}. */
 export const RoleSchema = RoleNameSchema;
+
+/** @deprecated Use {@link RoleName}. */
+export type Role = z.infer<typeof RoleSchema>;

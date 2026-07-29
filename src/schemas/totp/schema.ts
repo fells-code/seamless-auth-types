@@ -30,3 +30,5 @@ export type TotpEnrollmentStartResponse = z.infer<typeof TotpEnrollmentStartSche
 export const TotpVerifySuccessSchema = z.object({
   message: z.string(),
 });
+
+export type TotpVerifySuccess = z.infer<typeof TotpVerifySuccessSchema>;

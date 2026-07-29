@@ -65,7 +65,11 @@ export const UserResponseSchema = z.object({
   user: ApiUserSchema,
 });
 
+export type UserResponse = z.infer<typeof UserResponseSchema>;
+
 export const UsersListResponseSchema = z.object({
   users: z.array(ApiUserSchema),
   total: z.number(),
 });
+
+export type UsersListResponse = z.infer<typeof UsersListResponseSchema>;

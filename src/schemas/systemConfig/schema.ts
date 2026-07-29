@@ -13,6 +13,8 @@ export type LoginMethod = z.infer<typeof LoginMethodSchema>;
 
 export const OAuthProviderIdSchema = z.string().regex(/^[a-z0-9-]{2,40}$/);
 
+export type OAuthProviderId = z.infer<typeof OAuthProviderIdSchema>;
+
 export const OAuthProviderConfigSchema = z.object({
   id: OAuthProviderIdSchema,
   name: z.string().trim().min(1).max(80),
@@ -140,9 +142,13 @@ export function createPatchSystemConfigSchema(existing: SystemConfig) {
 
 export const OAuthProviderCreateSchema = OAuthProviderConfigSchema;
 
+export type OAuthProviderCreate = z.infer<typeof OAuthProviderCreateSchema>;
+
 export const OAuthProviderIdParamSchema = z.object({
   id: OAuthProviderIdSchema,
 });
+
+export type OAuthProviderIdParam = z.infer<typeof OAuthProviderIdParamSchema>;
 
 // The id is immutable and taken from the path, so it is omitted here. Every other
 // field is optional so callers can patch a single attribute without resending the
@@ -157,16 +163,24 @@ export const OAuthProvidersListResponseSchema = z.object({
   providers: z.array(OAuthProviderConfigSchema),
 });
 
+export type OAuthProvidersListResponse = z.infer<typeof OAuthProvidersListResponseSchema>;
+
 export const OAuthProviderResponseSchema = z.object({
   provider: OAuthProviderConfigSchema,
 });
+
+export type OAuthProviderResponse = z.infer<typeof OAuthProviderResponseSchema>;
 
 export const OAuthProviderDeletedResponseSchema = z.object({
   success: z.literal(true),
   id: z.string(),
 });
 
+export type OAuthProviderDeletedResponse = z.infer<typeof OAuthProviderDeletedResponseSchema>;
+
 export const GetSystemConfigResponseSchema = SystemConfigSchema;
+
+export type GetSystemConfigResponse = z.infer<typeof GetSystemConfigResponseSchema>;
 
 export const UpdateSystemConfigResponseSchema = z.object({
   success: z.boolean(),
@@ -178,3 +192,5 @@ export type UpdateSystemConfigResponse = z.infer<typeof UpdateSystemConfigRespon
 export const AvailableRolesResponseSchema = z.object({
   roles: z.array(z.string()),
 });
+
+export type AvailableRolesResponse = z.infer<typeof AvailableRolesResponseSchema>;

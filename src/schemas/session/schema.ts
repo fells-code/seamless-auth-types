@@ -16,6 +16,8 @@ export const SessionIdParamsSchema = z.object({
   id: z.string(),
 });
 
+export type SessionIdParams = z.infer<typeof SessionIdParamsSchema>;
+
 export const SessionListResponseSchema = z.object({
   sessions: z.array(SessionSchema),
   total: z.number(),

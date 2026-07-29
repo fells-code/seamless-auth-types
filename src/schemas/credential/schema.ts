@@ -94,6 +94,10 @@ export const CredentialUpdateResponseSchema = z.object({
   credential: CredentialResponseSchema,
 });
 
+export type CredentialUpdateResponse = z.infer<typeof CredentialUpdateResponseSchema>;
+
 export const CredentialCountResponseSchema = z.object({
   count: z.number(),
 });
+
+export type CredentialCountResponse = z.infer<typeof CredentialCountResponseSchema>;
