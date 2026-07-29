@@ -11,8 +11,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./role": {
+      "types": "./dist/schemas/role/schema.d.ts",
+      "import": "./dist/schemas/role/schema.js"
+    },
+    "./role/matching": {
+      "types": "./dist/schemas/role/matching.d.ts",
+      "import": "./dist/schemas/role/matching.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
