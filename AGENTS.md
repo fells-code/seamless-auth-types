@@ -72,11 +72,23 @@ src/
   index.ts              public barrel: re-exports every schema module
   shared.ts             cross-cutting shared types/helpers
   schemas/
+    common/             pagination, message/error envelopes, metadata
+    role/               role name rules + scoped-role matching
     user/               User model + schema
     credential/         Credential (WebAuthn/passkey) model + schema
     session/            Session model + schema
-    auth/               Auth request/response contracts
     authEvent/          Auth event/audit model + schema
+    messaging/          email/SMS message shapes + auth delivery instructions
+    systemConfig/       system config, login methods, OAuth provider config
+    auth/               Auth request/response contracts
+    oauth/              public provider listings + OAuth login handshake
+    webauthn/           WebAuthn registration/assertion contracts
+    totp/               TOTP enrollment, status, verification
+    stepUp/             step-up freshness status
+    organization/       organizations, memberships, org switching
+    me/                 the caller's own user + GET /users/me
+    metrics/            dashboard metrics, timeseries, anomalies
+    admin/              admin-only user detail and recovery contracts
 ```
 
 - `src/index.ts` is the public surface. A new schema is only exported once it is

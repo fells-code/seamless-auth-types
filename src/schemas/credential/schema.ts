@@ -1,9 +1,24 @@
 import z from 'zod';
 import { IsoDate } from '../../shared.js';
 
-const TransportSchema = z.enum(['usb', 'ble', 'nfc', 'internal']);
+// Mirrors WebAuthn's AuthenticatorTransportFuture. Authenticators report
+// transports the browser passes through verbatim, so anything narrower rejects
+// credentials the platform considers valid.
+export const TransportSchema = z.enum([
+  'ble',
+  'cable',
+  'hybrid',
+  'internal',
+  'nfc',
+  'smart-card',
+  'usb',
+]);
 
-const DeviceTypeSchema = z.enum(['singleDevice', 'multiDevice']);
+export type Transport = z.infer<typeof TransportSchema>;
+
+export const DeviceTypeSchema = z.enum(['singleDevice', 'multiDevice']);
+
+export type DeviceType = z.infer<typeof DeviceTypeSchema>;
 
 export const CredentialSchema = z.object({
   id: z.string(),
@@ -57,4 +72,28 @@ export const CredentialApiSchema = CredentialSchema.pick({
   browser: true,
   deviceInfo: true,
   createdAt: true,
+});
+
+export type CredentialApi = z.infer<typeof CredentialApiSchema>;
+
+/**
+ * A credential as the API returns it. `backedup` is the historical lowercase
+ * spelling kept alongside `backedUp` so older SDK builds keep working; new
+ * consumers should read `backedUp`.
+ */
+export const CredentialResponseSchema = CredentialApiSchema.extend({
+  backedup: z.boolean(),
+  backedUp: z.boolean(),
+  prfCapable: z.boolean().optional(),
+});
+
+export type CredentialResponse = z.infer<typeof CredentialResponseSchema>;
+
+export const CredentialUpdateResponseSchema = z.object({
+  message: z.string(),
+  credential: CredentialResponseSchema,
+});
+
+export const CredentialCountResponseSchema = z.object({
+  count: z.number(),
 });

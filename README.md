@@ -57,6 +57,33 @@ function handleUser(user: User) {
 
 ---
 
+## Modules
+
+Every module is re-exported from the package root, so import from
+`@seamless-auth/types` rather than a subpath.
+
+| Module         | Covers                                                              |
+| -------------- | ------------------------------------------------------------------- |
+| `common`       | Pagination, message and error envelopes, metadata                   |
+| `role`         | Role name rules plus the scoped-role matcher (`roleGrantsAccess`)   |
+| `user`         | User domain model, wire shape, create and update requests           |
+| `credential`   | WebAuthn credentials and their API responses                        |
+| `session`      | Sessions and session listings                                       |
+| `authEvent`    | Auth event model, the event type enum, and event queries            |
+| `messaging`    | Email and SMS message shapes plus auth delivery instructions        |
+| `systemConfig` | System config, login methods, lockout policy, OAuth provider config |
+| `auth`         | Login, refresh, registration, OTP, magic link, and logout contracts |
+| `oauth`        | Public provider listings and the OAuth login handshake              |
+| `webauthn`     | Registration and assertion request and response contracts           |
+| `totp`         | TOTP enrollment, status, and verification                           |
+| `stepUp`       | Step-up freshness status                                            |
+| `organization` | Organizations, memberships, and the org switch response             |
+| `me`           | The caller's own user and `GET /users/me`                           |
+| `metrics`      | Dashboard metrics, timeseries, and security anomalies               |
+| `admin`        | Admin-only user detail, anomalies, and device replacement recovery  |
+
+---
+
 ## Zod as the Source of Truth
 
 All models are defined using Zod:
