@@ -45,6 +45,23 @@ const user = UserSchema.parse(data);
 User role schemas accept plain roles such as `admin` and colon-separated scoped roles such as
 `admin:read` and `admin:write`. Whitespace, underscores, slashes, and backslashes are rejected.
 
+### Match roles without Zod
+
+`roleGrantsAccess` and `hasScopedRole` are plain string logic, but reaching them through the
+package root loads Zod and every schema in the barrel. Code on the authorization hot path can
+import them from `@seamless-auth/types/role/matching` instead, which has no runtime dependencies:
+
+```ts
+import { hasScopedRole } from '@seamless-auth/types/role/matching';
+
+if (!hasScopedRole(user.roles, 'billing:invoices:read')) {
+  throw new Error('forbidden');
+}
+```
+
+`@seamless-auth/types/role` adds `RoleNameSchema` on top of the same matchers, and the package
+root still exports all of them, so existing imports keep working.
+
 ### Infer types
 
 ```ts
@@ -60,7 +77,7 @@ function handleUser(user: User) {
 ## Modules
 
 Every module is re-exported from the package root, so import from
-`@seamless-auth/types` rather than a subpath.
+`@seamless-auth/types` unless one of the subpath exports below fits better.
 
 | Module         | Covers                                                              |
 | -------------- | ------------------------------------------------------------------- |
@@ -81,6 +98,13 @@ Every module is re-exported from the package root, so import from
 | `me`           | The caller's own user and `GET /users/me`                           |
 | `metrics`      | Dashboard metrics, timeseries, and security anomalies               |
 | `admin`        | Admin-only user detail, anomalies, and device replacement recovery  |
+
+### Subpath exports
+
+| Subpath                              | Covers                                 |
+| ------------------------------------ | -------------------------------------- |
+| `@seamless-auth/types/role`          | Role name schema plus the matchers     |
+| `@seamless-auth/types/role/matching` | The matchers alone, with no Zod import |
 
 ---
 
