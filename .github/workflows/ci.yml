@@ -21,19 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HUSKY: 0
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [24]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.nvmrc'
           cache: npm
 
       - name: Install dependencies
@@ -48,17 +46,16 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Run tests with coverage
-        run: npm run coverage
+      # Only the runtime tree, since dev tooling never reaches a consumer. A high
+      # severity advisory in what we actually publish should fail the build.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
 
       - name: Verify package contents
         run: npm run check-npm-build
-
-      - name: Upload coverage reports to Codecov
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.node-version == 24
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}

@@ -6,6 +6,20 @@ Seamless Auth is a security-sensitive project used to protect authentication flo
 
 ---
 
+## Supported Versions
+
+`@seamless-auth/types` is pre-1.0. Only the latest published minor on
+[npm](https://www.npmjs.com/package/@seamless-auth/types) receives fixes, and there are no
+backports to earlier minors. Report against the latest release, and upgrade to it first if you
+can.
+
+This package contains schemas and types with no runtime behavior beyond validation, so most
+security-relevant findings here are validation gaps: a schema that accepts input it should
+reject, or a type that lets an unsafe value through to a consumer. Those are in scope. Findings
+in the API server, SDKs, or hosted services belong in their own repositories.
+
+---
+
 ## Reporting a Vulnerability
 
 If you believe you’ve found a security issue, **please do NOT open a public GitHub issue**. Instead, report privately via email:
