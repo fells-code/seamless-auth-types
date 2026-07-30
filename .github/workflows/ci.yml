@@ -46,6 +46,11 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      # Only the runtime tree, since dev tooling never reaches a consumer. A high
+      # severity advisory in what we actually publish should fail the build.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Test
         run: npm test
 
