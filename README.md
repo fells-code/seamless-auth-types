@@ -176,8 +176,11 @@ history.
   so the published tarball is cryptographically linked to the commit and workflow that built it.
 - One runtime dependency (`zod`). Dependency updates are automated and reviewed like any other
   change.
-- The published tarball is limited to `dist`, `README.md`, `CHANGELOG.md`, `LICENSE`, and
-  `package.json`. `npm run check-npm-build` prints the contents in CI on every push and release.
+- The published tarball is limited to `dist`, the non-test sources under `src`, `README.md`,
+  `CHANGELOG.md`, `LICENSE`, and `package.json`. `npm run check-npm-build` prints the contents in
+  CI on every push and release.
+- Sources ship alongside the declaration maps and source maps, so Go to Definition in your editor
+  lands on the actual schema rather than a `.d.ts`.
 
 ## Security
 
@@ -197,7 +200,6 @@ npm run typecheck
 npm run lint
 npm run format:check
 npm test
-npm run coverage
 ```
 
 ## Contributing

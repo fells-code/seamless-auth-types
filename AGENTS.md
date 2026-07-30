@@ -104,7 +104,6 @@ src/
 | Lint          | `npm run lint`            |
 | Format        | `npm run format`          |
 | Unit tests    | `npm test` (vitest)       |
-| Coverage      | `npm run coverage`        |
 | Add changeset | `npm run changeset`       |
 | Pack preview  | `npm run check-npm-build` |
 

@@ -24,6 +24,8 @@
   "sideEffects": false,
   "files": [
     "dist",
+    "src",
+    "!src/**/*.test.ts",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -58,7 +60,6 @@
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release:stable": "npm run build && changeset publish",
@@ -82,7 +83,6 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
-    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
