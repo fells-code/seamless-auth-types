@@ -71,7 +71,12 @@ export const RegistrationSuccessSchema = z.object({
   message: z.string(),
   sub: z.string().optional(),
   token: z.string().optional(),
-  ttl: z.string().optional(),
+  // Seconds, as everywhere else a ttl appears in this file. It was a string,
+  // matching what the API sent, which left this the only ttl in the contract a
+  // consumer could not treat like the others. A string reaching a cookie library
+  // that requires an integer is a failed request, so the type states what the
+  // value has to be rather than what it happened to be.
+  ttl: z.number().optional(),
   delivery: AuthDeliverySchema.optional(),
 });
 

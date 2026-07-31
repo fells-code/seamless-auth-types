@@ -6,6 +6,7 @@ import {
   OTPVerifyTokenSuccessSchema,
   RefreshSuccessResponseSchema,
   RegistrationRequestSchema,
+  RegistrationSuccessSchema,
 } from './auth.schema.js';
 
 describe('LoginRequestSchema', () => {
@@ -83,5 +84,25 @@ describe('RegistrationRequestSchema', () => {
 
   it('rejects an invalid email', () => {
     expect(() => RegistrationRequestSchema.parse({ email: 'nope' })).toThrow();
+  });
+});
+
+describe('RegistrationSuccessSchema', () => {
+  const base = { message: 'Registration started', sub: 'user-123', token: 't' };
+
+  it('accepts a ttl in seconds', () => {
+    expect(() => RegistrationSuccessSchema.parse({ ...base, ttl: 300 })).not.toThrow();
+  });
+
+  // This field was a string, which is what the API sent. It was the only ttl in
+  // this file a consumer could not treat like the others, and handing a string
+  // to a cookie library that requires an integer fails the request.
+  it('rejects a ttl as a string, the way every other ttl here does', () => {
+    expect(() => RegistrationSuccessSchema.parse({ ...base, ttl: '300' })).toThrow();
+    expect(() => LoginSuccessResponseSchema.parse({ message: 'ok', ttl: '300' })).toThrow();
+  });
+
+  it('leaves the ttl optional', () => {
+    expect(() => RegistrationSuccessSchema.parse(base)).not.toThrow();
   });
 });
