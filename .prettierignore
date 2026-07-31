@@ -3,3 +3,11 @@ node_modules
 
 # Written by changesets; leave its formatting alone so a release cannot fail format:check.
 CHANGELOG.md
+
+# Issue templates carry illustrative schema snippets in fenced code blocks, and
+# Prettier reformats what is inside those blocks. It collapses a deliberately
+# multi-line placeholder into `z.object({/* ... */});`, which is harder to read
+# than the shape a contributor is meant to copy. These files are prose rendered
+# by GitHub rather than anything compiled, so formatting them gains nothing and
+# leaves the check hostage to how a future Prettier treats embedded code.
+.github/ISSUE_TEMPLATE/
