@@ -3,6 +3,7 @@ import {
   DefaultLockoutPolicy,
   OAuthProviderConfigSchema,
   OAuthProviderUpdateSchema,
+  PublicSystemConfigResponseSchema,
   SystemConfigPatchSchema,
   SystemConfigSchema,
   createPatchSystemConfigSchema,
@@ -133,5 +134,31 @@ describe('createPatchSystemConfigSchema', () => {
     expect(() =>
       schema.parse({ default_roles: ['auditor'], available_roles: ['user', 'admin'] }),
     ).toThrow();
+  });
+});
+
+describe('PublicSystemConfigResponseSchema', () => {
+  it('accepts the configured login methods', () => {
+    expect(() =>
+      PublicSystemConfigResponseSchema.parse({ loginMethods: ['passkey', 'magic_link'] }),
+    ).not.toThrow();
+  });
+
+  it('rejects an empty method list, which would leave a client with nothing to offer', () => {
+    expect(() => PublicSystemConfigResponseSchema.parse({ loginMethods: [] })).toThrow();
+  });
+
+  it('rejects a method outside the enum', () => {
+    expect(() => PublicSystemConfigResponseSchema.parse({ loginMethods: ['password'] })).toThrow();
+  });
+
+  it('drops any config key that is not part of the public slice', () => {
+    const parsed = PublicSystemConfigResponseSchema.parse({
+      loginMethods: ['passkey'],
+      rpid: 'localhost',
+      origins: ['http://localhost:5173'],
+    });
+
+    expect(parsed).toEqual({ loginMethods: ['passkey'] });
   });
 });

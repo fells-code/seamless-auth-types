@@ -194,3 +194,22 @@ export const AvailableRolesResponseSchema = z.object({
 });
 
 export type AvailableRolesResponse = z.infer<typeof AvailableRolesResponseSchema>;
+
+/**
+ * The slice of the system configuration a signed-out client may read.
+ *
+ * Served unauthenticated so the bundled sign-in screens can match how an
+ * instance is actually configured before anyone has a session, rather than
+ * guessing at a default set of methods. It also tells a client whether declining
+ * a passkey during registration would leave the user with no way back in, which
+ * is the difference between offering a skip and trapping someone out of their
+ * own account.
+ *
+ * Everything else in SystemConfigSchema stays behind the admin routes. Only add
+ * a key here when a signed-out client genuinely cannot work without it.
+ */
+export const PublicSystemConfigResponseSchema = z.object({
+  loginMethods: z.array(LoginMethodSchema).min(1),
+});
+
+export type PublicSystemConfigResponse = z.infer<typeof PublicSystemConfigResponseSchema>;
