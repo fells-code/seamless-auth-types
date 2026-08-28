@@ -65,6 +65,28 @@ export const DefaultLockoutPolicy = {
   lockoutSeconds: 15 * 60,
 } as const;
 
+export const AuthenticatorAttachmentPolicySchema = z.enum(['any', 'platform', 'cross-platform']);
+
+export type AuthenticatorAttachmentPolicy = z.infer<typeof AuthenticatorAttachmentPolicySchema>;
+
+/**
+ * Which authenticators a deployment will enrol.
+ *
+ * `attachment` is the standing default for the browser picker at registration.
+ * `any` offers both built-in and roaming authenticators, which is what a
+ * deployment issuing hardware security keys needs. Naming one narrows the picker
+ * and also bounds what a per-request override may ask for.
+ */
+export const AuthenticatorPolicySchema = z.object({
+  attachment: AuthenticatorAttachmentPolicySchema.default('any'),
+});
+
+export type AuthenticatorPolicy = z.infer<typeof AuthenticatorPolicySchema>;
+
+export const DefaultAuthenticatorPolicy = {
+  attachment: 'any',
+} as const;
+
 export const SystemConfigSchema = z.object({
   app_name: z.string().min(3),
   default_roles: z.array(RoleNameSchema).min(1),
@@ -73,6 +95,7 @@ export const SystemConfigSchema = z.object({
   passkey_login_fallback_enabled: z.boolean(),
   oauth_providers: z.array(OAuthProviderConfigSchema).default([]),
   lockout_policy: LockoutPolicySchema.default(DefaultLockoutPolicy),
+  authenticator_policy: AuthenticatorPolicySchema.default(DefaultAuthenticatorPolicy),
 
   access_token_ttl: z.string().regex(/^\d+[smhd]$/),
   refresh_token_ttl: z.string().regex(/^\d+[smhd]$/),
@@ -98,6 +121,7 @@ export const SystemConfigPatchSchema = z
       SystemConfigSchema.shape.passkey_login_fallback_enabled.optional(),
     oauth_providers: z.array(OAuthProviderConfigSchema).optional(),
     lockout_policy: LockoutPolicySchema.optional(),
+    authenticator_policy: AuthenticatorPolicySchema.optional(),
     access_token_ttl: SystemConfigSchema.shape.access_token_ttl.optional(),
     refresh_token_ttl: SystemConfigSchema.shape.refresh_token_ttl.optional(),
     rate_limit: SystemConfigSchema.shape.rate_limit.optional(),
