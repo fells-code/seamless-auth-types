@@ -204,3 +204,33 @@ describe('SystemConfigSchema authenticator_policy', () => {
     expect(parsed.success).toBe(true);
   });
 });
+
+describe('SystemConfigSchema session_idle_ttl', () => {
+  it('defaults when config predates the key', () => {
+    expect(SystemConfigSchema.parse(baseConfig).session_idle_ttl).toBe('8h');
+  });
+
+  it('keeps a configured value', () => {
+    const parsed = SystemConfigSchema.parse({ ...baseConfig, session_idle_ttl: '30m' });
+
+    expect(parsed.session_idle_ttl).toBe('30m');
+  });
+
+  it('rejects a malformed duration', () => {
+    expect(
+      SystemConfigSchema.safeParse({ ...baseConfig, session_idle_ttl: 'half an hour' }).success,
+    ).toBe(false);
+  });
+
+  it('is patchable', () => {
+    const parsed = SystemConfigPatchSchema.safeParse({ session_idle_ttl: '15m' });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it('does not inject a default when absent from a patch', () => {
+    const parsed = SystemConfigPatchSchema.parse({ app_name: 'Seamless' });
+
+    expect('session_idle_ttl' in parsed).toBe(false);
+  });
+});
