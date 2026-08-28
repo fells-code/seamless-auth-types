@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  AuthenticatorPolicySchema,
   DefaultLockoutPolicy,
   OAuthProviderConfigSchema,
   OAuthProviderUpdateSchema,
@@ -160,5 +161,46 @@ describe('PublicSystemConfigResponseSchema', () => {
     });
 
     expect(parsed).toEqual({ loginMethods: ['passkey'] });
+  });
+});
+
+describe('AuthenticatorPolicySchema', () => {
+  it('defaults to offering both authenticator kinds', () => {
+    expect(AuthenticatorPolicySchema.parse({})).toEqual({ attachment: 'any' });
+  });
+
+  it('accepts each attachment a deployment may pin to', () => {
+    for (const attachment of ['any', 'platform', 'cross-platform'] as const) {
+      expect(AuthenticatorPolicySchema.parse({ attachment }).attachment).toBe(attachment);
+    }
+  });
+
+  it('rejects an unknown attachment', () => {
+    expect(AuthenticatorPolicySchema.safeParse({ attachment: 'usb-only' }).success).toBe(false);
+  });
+});
+
+describe('SystemConfigSchema authenticator_policy', () => {
+  it('defaults the block when config predates it', () => {
+    const parsed = SystemConfigSchema.parse(baseConfig);
+
+    expect(parsed.authenticator_policy).toEqual({ attachment: 'any' });
+  });
+
+  it('keeps a pinned attachment', () => {
+    const parsed = SystemConfigSchema.parse({
+      ...baseConfig,
+      authenticator_policy: { attachment: 'cross-platform' },
+    });
+
+    expect(parsed.authenticator_policy.attachment).toBe('cross-platform');
+  });
+
+  it('is patchable through the strict patch schema', () => {
+    const parsed = SystemConfigPatchSchema.safeParse({
+      authenticator_policy: { attachment: 'platform' },
+    });
+
+    expect(parsed.success).toBe(true);
   });
 });
