@@ -87,6 +87,8 @@ export const DefaultAuthenticatorPolicy = {
   attachment: 'any',
 } as const;
 
+const DurationSchema = z.string().regex(/^\d+[smhd]$/);
+
 export const SystemConfigSchema = z.object({
   app_name: z.string().min(3),
   default_roles: z.array(RoleNameSchema).min(1),
@@ -98,6 +100,15 @@ export const SystemConfigSchema = z.object({
   authenticator_policy: AuthenticatorPolicySchema.default(DefaultAuthenticatorPolicy),
 
   access_token_ttl: z.string().regex(/^\d+[smhd]$/),
+
+  /**
+   * How long a session may live without being refreshed.
+   *
+   * The absolute session lifetime is `refresh_token_ttl`, since the refresh token
+   * is the session credential. This is the idle bound underneath it, and it only
+   * does anything when it is shorter, so keep the two distinct.
+   */
+  session_idle_ttl: DurationSchema.default('8h'),
   refresh_token_ttl: z.string().regex(/^\d+[smhd]$/),
 
   rate_limit: z.number().int().positive(),
@@ -123,6 +134,7 @@ export const SystemConfigPatchSchema = z
     lockout_policy: LockoutPolicySchema.optional(),
     authenticator_policy: AuthenticatorPolicySchema.optional(),
     access_token_ttl: SystemConfigSchema.shape.access_token_ttl.optional(),
+    session_idle_ttl: DurationSchema.optional(),
     refresh_token_ttl: SystemConfigSchema.shape.refresh_token_ttl.optional(),
     rate_limit: SystemConfigSchema.shape.rate_limit.optional(),
     delay_after: SystemConfigSchema.shape.delay_after.optional(),
