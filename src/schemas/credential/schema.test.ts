@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CredentialSchema } from './schema.js';
+import { CredentialResponseSchema, CredentialSchema } from './schema.js';
 
 const now = new Date().toISOString();
 
@@ -96,5 +96,41 @@ describe('CredentialSchema', () => {
     const { ...rest } = baseCredential;
 
     expect(() => CredentialSchema.parse(rest)).not.toThrow();
+  });
+});
+
+describe('credential aaguid', () => {
+  const base = {
+    id: 'cred-1',
+    backedUp: false,
+    backedup: false,
+    counter: 0,
+    createdAt: '2026-08-29T00:00:00.000Z',
+  };
+
+  it('parses a credential registered before the field existed', () => {
+    expect(CredentialResponseSchema.parse(base).aaguid).toBeUndefined();
+  });
+
+  it('carries the authenticator model when one was reported', () => {
+    const parsed = CredentialResponseSchema.parse({
+      ...base,
+      aaguid: 'ee882879-721c-4913-9775-3dfcce97072a',
+    });
+
+    expect(parsed.aaguid).toBe('ee882879-721c-4913-9775-3dfcce97072a');
+  });
+
+  it('accepts an authenticator that declined to identify itself', () => {
+    const parsed = CredentialResponseSchema.parse({
+      ...base,
+      aaguid: '00000000-0000-0000-0000-000000000000',
+    });
+
+    expect(parsed.aaguid).toBe('00000000-0000-0000-0000-000000000000');
+  });
+
+  it('accepts an explicit null', () => {
+    expect(CredentialResponseSchema.parse({ ...base, aaguid: null }).aaguid).toBeNull();
   });
 });
