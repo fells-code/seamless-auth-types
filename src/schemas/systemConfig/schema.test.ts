@@ -166,7 +166,10 @@ describe('PublicSystemConfigResponseSchema', () => {
 
 describe('AuthenticatorPolicySchema', () => {
   it('defaults to offering both authenticator kinds', () => {
-    expect(AuthenticatorPolicySchema.parse({})).toEqual({ attachment: 'any' });
+    expect(AuthenticatorPolicySchema.parse({})).toEqual({
+      attachment: 'any',
+      userVerification: 'required',
+    });
   });
 
   it('accepts each attachment a deployment may pin to', () => {
@@ -184,7 +187,10 @@ describe('SystemConfigSchema authenticator_policy', () => {
   it('defaults the block when config predates it', () => {
     const parsed = SystemConfigSchema.parse(baseConfig);
 
-    expect(parsed.authenticator_policy).toEqual({ attachment: 'any' });
+    expect(parsed.authenticator_policy).toEqual({
+      attachment: 'any',
+      userVerification: 'required',
+    });
   });
 
   it('keeps a pinned attachment', () => {
@@ -232,5 +238,29 @@ describe('SystemConfigSchema session_idle_ttl', () => {
     const parsed = SystemConfigPatchSchema.parse({ app_name: 'Seamless' });
 
     expect('session_idle_ttl' in parsed).toBe(false);
+  });
+});
+
+describe('AuthenticatorPolicySchema user verification', () => {
+  it('requires user verification unless a deployment says otherwise', () => {
+    expect(AuthenticatorPolicySchema.parse({}).userVerification).toBe('required');
+  });
+
+  it('accepts each value the WebAuthn specification defines', () => {
+    for (const value of ['required', 'preferred', 'discouraged'] as const) {
+      expect(AuthenticatorPolicySchema.parse({ userVerification: value }).userVerification).toBe(
+        value,
+      );
+    }
+  });
+
+  it('rejects anything outside that set', () => {
+    expect(AuthenticatorPolicySchema.safeParse({ userVerification: 'maybe' }).success).toBe(false);
+  });
+
+  it('leaves attachment alone when only verification is set', () => {
+    const parsed = AuthenticatorPolicySchema.parse({ userVerification: 'preferred' });
+
+    expect(parsed.attachment).toBe('any');
   });
 });
