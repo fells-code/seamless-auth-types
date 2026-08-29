@@ -10,16 +10,55 @@ export const UserIdParamSchema = z.object({
 
 export type UserIdParam = z.infer<typeof UserIdParamSchema>;
 
+export const RecoveryProofingMethodSchema = z.enum(['in_person', 'remote_exception']);
+
+export type RecoveryProofingMethod = z.infer<typeof RecoveryProofingMethodSchema>;
+
+/**
+ * How the operator established that the person asking is who they say they are.
+ *
+ * Admin-assisted recovery revokes every session, removes every passkey and
+ * disables TOTP, so it is the step social engineering aims at. Recording the
+ * proofing makes a recovery reviewable after the fact and forces the operator to
+ * have done it.
+ *
+ * `evidenceRef` is a pointer, for example a ticket or case number, not the
+ * evidence itself. Do not put personal data here: it is written to the audit
+ * trail, where identifiers are redacted.
+ */
+export const RecoveryProofingSchema = z
+  .object({
+    method: RecoveryProofingMethodSchema,
+    evidenceRef: z.string().trim().min(1).max(200),
+    approver: z.string().trim().min(1).max(200).optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.method === 'remote_exception' && !value.approver) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['approver'],
+        message: 'A remote exception requires a named approver',
+      });
+    }
+  });
+
+export type RecoveryProofing = z.infer<typeof RecoveryProofingSchema>;
+
 /**
  * What an operator clears when a user replaces a lost device. Each step is
  * opt-out rather than opt-in so a hurried recovery does not leave the old
  * device's credentials in place.
+ *
+ * `proofing` is required: this endpoint cannot be called without stating how
+ * identity was established.
  */
 export const DeviceReplacementRecoverySchema = z
   .object({
     revokeSessions: z.boolean().default(true),
     removePasskeys: z.boolean().default(true),
     disableTotp: z.boolean().default(true),
+    proofing: RecoveryProofingSchema,
   })
   .strict();
 
