@@ -77,6 +77,10 @@ export type AuthenticatorAttachmentPolicy = z.infer<typeof AuthenticatorAttachme
  * deployment issuing hardware security keys needs. Naming one narrows the picker
  * and also bounds what a per-request override may ask for.
  */
+export const AttestationPolicySchema = z.enum(['none', 'direct']);
+
+export type AttestationPolicy = z.infer<typeof AttestationPolicySchema>;
+
 export const UserVerificationPolicySchema = z.enum(['required', 'preferred', 'discouraged']);
 
 export type UserVerificationPolicy = z.infer<typeof UserVerificationPolicySchema>;
@@ -96,6 +100,26 @@ export const AuthenticatorPolicySchema = z.object({
    * claim.
    */
   userVerification: UserVerificationPolicySchema.default('required'),
+  /**
+   * Whether to ask the authenticator to identify itself with an attestation
+   * statement.
+   *
+   * `none`, the default, asks for nothing and is right for a consumer
+   * deployment: attestation carries a privacy cost and most relying parties have
+   * no use for it. `direct` requests a statement, which is what makes metadata
+   * validation and any allow or deny list of approved models possible, and is
+   * what an organisation issuing its own authenticators wants.
+   */
+  attestation: AttestationPolicySchema.default('none'),
+  /**
+   * What to do with an authenticator the FIDO Metadata Service does not list.
+   *
+   * `false`, the default, registers it anyway. `true` refuses it, which is the
+   * stricter posture an organisation wanting only known, certified models would
+   * choose. Only meaningful when `attestation` is `direct`, since an
+   * authenticator that was never asked to identify itself cannot be looked up.
+   */
+  requireKnownAuthenticator: z.boolean().default(false),
 });
 
 export type AuthenticatorPolicy = z.infer<typeof AuthenticatorPolicySchema>;
@@ -103,6 +127,8 @@ export type AuthenticatorPolicy = z.infer<typeof AuthenticatorPolicySchema>;
 export const DefaultAuthenticatorPolicy = {
   attachment: 'any',
   userVerification: 'required',
+  attestation: 'none',
+  requireKnownAuthenticator: false,
 } as const;
 
 const DurationSchema = z.string().regex(/^\d+[smhd]$/);

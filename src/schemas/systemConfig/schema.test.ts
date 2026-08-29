@@ -169,6 +169,8 @@ describe('AuthenticatorPolicySchema', () => {
     expect(AuthenticatorPolicySchema.parse({})).toEqual({
       attachment: 'any',
       userVerification: 'required',
+      attestation: 'none',
+      requireKnownAuthenticator: false,
     });
   });
 
@@ -190,6 +192,8 @@ describe('SystemConfigSchema authenticator_policy', () => {
     expect(parsed.authenticator_policy).toEqual({
       attachment: 'any',
       userVerification: 'required',
+      attestation: 'none',
+      requireKnownAuthenticator: false,
     });
   });
 
@@ -262,5 +266,33 @@ describe('AuthenticatorPolicySchema user verification', () => {
     const parsed = AuthenticatorPolicySchema.parse({ userVerification: 'preferred' });
 
     expect(parsed.attachment).toBe('any');
+  });
+});
+
+describe('AuthenticatorPolicySchema attestation', () => {
+  it('asks for no attestation unless a deployment opts in', () => {
+    expect(AuthenticatorPolicySchema.parse({}).attestation).toBe('none');
+  });
+
+  it('accepts direct attestation', () => {
+    expect(AuthenticatorPolicySchema.parse({ attestation: 'direct' }).attestation).toBe('direct');
+  });
+
+  it('rejects an attestation conveyance it cannot act on', () => {
+    // 'indirect' and 'enterprise' are valid WebAuthn values but are not supported
+    // here, so accepting them would promise handling that does not exist.
+    for (const value of ['indirect', 'enterprise', 'yes']) {
+      expect(AuthenticatorPolicySchema.safeParse({ attestation: value }).success).toBe(false);
+    }
+  });
+
+  it('registers authenticators the metadata service does not list, by default', () => {
+    expect(AuthenticatorPolicySchema.parse({}).requireKnownAuthenticator).toBe(false);
+  });
+
+  it('can be told to refuse them', () => {
+    const parsed = AuthenticatorPolicySchema.parse({ requireKnownAuthenticator: true });
+
+    expect(parsed.requireKnownAuthenticator).toBe(true);
   });
 });
