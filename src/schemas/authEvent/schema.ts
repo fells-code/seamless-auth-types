@@ -96,6 +96,13 @@ export const AuthEventSchema = z.object({
    * column existed.
    */
   actor_user_id: z.string().nullable().optional(),
+  /**
+   * The session the action was taken from.
+   *
+   * Null for anything that happened before a session existed, which is most of
+   * the pre-auth surface: login challenges, OTP sends, magic link requests.
+   */
+  session_id: z.string().nullable().optional(),
   type: z.string(),
   ip_address: z.string().nullable().optional(),
   user_agent: z.string().nullable().optional(),
@@ -113,6 +120,8 @@ export const AuthEventQuerySchema = z.object({
   userId: z.string().optional(),
   /** Filters to what one administrator did, rather than what happened to one user. */
   actorUserId: z.string().optional(),
+  /** Filters to everything that happened in one session. */
+  sessionId: z.string().optional(),
   type: z
     .union([AuthEventTypeEnum, z.string(), z.array(z.union([AuthEventTypeEnum, z.string()]))])
     .optional(),
