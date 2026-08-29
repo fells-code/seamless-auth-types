@@ -26,6 +26,17 @@ export const CredentialSchema = z.object({
 
   publicKey: z.string(),
   counter: z.number(),
+  /**
+   * The authenticator's model identifier, as it reported at registration.
+   *
+   * Null for credentials registered before this was recorded. An all-zero value
+   * is not missing data: it is an authenticator declining to say what it is,
+   * which many platform authenticators do unless attestation is requested.
+   *
+   * This is the key the FIDO Metadata Service is looked up by, and the key an
+   * allow or deny list of approved authenticators is expressed in.
+   */
+  aaguid: z.string().nullable().optional(),
 
   transports: z.array(TransportSchema).optional(),
 
@@ -62,6 +73,7 @@ export type DeleteCredentialRequest = z.infer<typeof DeleteCredentialRequestSche
 
 export const CredentialApiSchema = CredentialSchema.pick({
   id: true,
+  aaguid: true,
   transports: true,
   deviceType: true,
   backedUp: true,
