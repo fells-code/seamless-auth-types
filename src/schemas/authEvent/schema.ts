@@ -87,6 +87,15 @@ export type AuthEventType = z.infer<typeof AuthEventTypeEnum>;
 export const AuthEventSchema = z.object({
   id: z.string(),
   user_id: z.string().nullable().optional(),
+  /**
+   * Who performed the action, when that is not the subject of it.
+   *
+   * An administrator acting on someone else's account is recorded with the
+   * target in `user_id` and the administrator here. Null for the ordinary case
+   * where a user acted on their own account, and for events written before the
+   * column existed.
+   */
+  actor_user_id: z.string().nullable().optional(),
   type: z.string(),
   ip_address: z.string().nullable().optional(),
   user_agent: z.string().nullable().optional(),
@@ -102,6 +111,8 @@ export const AuthEventQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 
   userId: z.string().optional(),
+  /** Filters to what one administrator did, rather than what happened to one user. */
+  actorUserId: z.string().optional(),
   type: z
     .union([AuthEventTypeEnum, z.string(), z.array(z.union([AuthEventTypeEnum, z.string()]))])
     .optional(),
