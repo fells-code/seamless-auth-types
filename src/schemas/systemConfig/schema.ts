@@ -77,14 +77,32 @@ export type AuthenticatorAttachmentPolicy = z.infer<typeof AuthenticatorAttachme
  * deployment issuing hardware security keys needs. Naming one narrows the picker
  * and also bounds what a per-request override may ask for.
  */
+export const UserVerificationPolicySchema = z.enum(['required', 'preferred', 'discouraged']);
+
+export type UserVerificationPolicy = z.infer<typeof UserVerificationPolicySchema>;
+
 export const AuthenticatorPolicySchema = z.object({
   attachment: AuthenticatorAttachmentPolicySchema.default('any'),
+  /**
+   * Whether the authenticator must verify the human, by PIN, biometric or
+   * equivalent, rather than only proving it holds the key.
+   *
+   * One value drives both what the browser is asked for and what the server
+   * enforces, so the two cannot disagree. Asking for less than is enforced sends
+   * a user through an entire ceremony that fails at the last step.
+   *
+   * `required` is the default because user verification is what separates a
+   * second factor from a second signature, and it is the basis of any AAL2
+   * claim.
+   */
+  userVerification: UserVerificationPolicySchema.default('required'),
 });
 
 export type AuthenticatorPolicy = z.infer<typeof AuthenticatorPolicySchema>;
 
 export const DefaultAuthenticatorPolicy = {
   attachment: 'any',
+  userVerification: 'required',
 } as const;
 
 const DurationSchema = z.string().regex(/^\d+[smhd]$/);
