@@ -171,6 +171,9 @@ describe('AuthenticatorPolicySchema', () => {
       userVerification: 'required',
       attestation: 'none',
       requireKnownAuthenticator: false,
+      syncedPasskeys: 'block',
+      aaguidAllowList: [],
+      aaguidDenyList: [],
     });
   });
 
@@ -194,6 +197,9 @@ describe('SystemConfigSchema authenticator_policy', () => {
       userVerification: 'required',
       attestation: 'none',
       requireKnownAuthenticator: false,
+      syncedPasskeys: 'block',
+      aaguidAllowList: [],
+      aaguidDenyList: [],
     });
   });
 
@@ -294,5 +300,52 @@ describe('AuthenticatorPolicySchema attestation', () => {
     const parsed = AuthenticatorPolicySchema.parse({ requireKnownAuthenticator: true });
 
     expect(parsed.requireKnownAuthenticator).toBe(true);
+  });
+});
+
+describe('AuthenticatorPolicySchema synced passkeys', () => {
+  it('blocks credentials that can leave the device by default', () => {
+    expect(AuthenticatorPolicySchema.parse({}).syncedPasskeys).toBe('block');
+  });
+
+  it('can be relaxed for a consumer deployment', () => {
+    expect(AuthenticatorPolicySchema.parse({ syncedPasskeys: 'allow' }).syncedPasskeys).toBe(
+      'allow',
+    );
+  });
+
+  it('rejects anything outside that choice', () => {
+    expect(AuthenticatorPolicySchema.safeParse({ syncedPasskeys: 'sometimes' }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe('AuthenticatorPolicySchema authenticator lists', () => {
+  it('restricts nothing by default', () => {
+    const parsed = AuthenticatorPolicySchema.parse({});
+
+    expect(parsed.aaguidAllowList).toEqual([]);
+    expect(parsed.aaguidDenyList).toEqual([]);
+  });
+
+  it('carries both lists', () => {
+    const parsed = AuthenticatorPolicySchema.parse({
+      aaguidAllowList: ['ee882879-721c-4913-9775-3dfcce97072a'],
+      aaguidDenyList: ['00000000-0000-0000-0000-000000000000'],
+    });
+
+    expect(parsed.aaguidAllowList).toHaveLength(1);
+    expect(parsed.aaguidDenyList).toHaveLength(1);
+  });
+});
+
+describe('SystemConfigSchema authenticator policy default', () => {
+  // The whole-object default is derived from the field defaults rather than
+  // restated, so this asserts the two agree.
+  it('matches what the policy schema produces on its own', () => {
+    const fromConfig = SystemConfigSchema.parse(baseConfig).authenticator_policy;
+
+    expect(fromConfig).toEqual(AuthenticatorPolicySchema.parse({}));
   });
 });

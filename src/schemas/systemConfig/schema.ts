@@ -79,6 +79,10 @@ export type AuthenticatorAttachmentPolicy = z.infer<typeof AuthenticatorAttachme
  */
 export const AttestationPolicySchema = z.enum(['none', 'direct']);
 
+export const SyncedPasskeyPolicySchema = z.enum(['allow', 'block']);
+
+export type SyncedPasskeyPolicy = z.infer<typeof SyncedPasskeyPolicySchema>;
+
 export type AttestationPolicy = z.infer<typeof AttestationPolicySchema>;
 
 export const UserVerificationPolicySchema = z.enum(['required', 'preferred', 'discouraged']);
@@ -120,6 +124,31 @@ export const AuthenticatorPolicySchema = z.object({
    * authenticator that was never asked to identify itself cannot be looked up.
    */
   requireKnownAuthenticator: z.boolean().default(false),
+  /**
+   * Whether a credential that can leave the device it was created on may be
+   * registered.
+   *
+   * A multi-device credential is synced by a platform password manager, so the
+   * private key exists somewhere outside the authenticator that made it. That is
+   * exactly what a consumer wants and exactly what an organisation issuing its
+   * own authenticators does not.
+   *
+   * Judged on backup eligibility rather than current backup state: a credential
+   * that *can* sync is the exposure, whether or not it has yet.
+   */
+  syncedPasskeys: SyncedPasskeyPolicySchema.default('block'),
+  /**
+   * Authenticator models that may register, by AAGUID.
+   *
+   * Empty, the default, means no restriction. A non-empty list admits only those
+   * models, which is how an organisation limits enrolment to the keys it issues
+   * or to certified hardware. Requires `attestation: 'direct'` to be meaningful,
+   * since an authenticator that was never asked to identify itself reports no
+   * usable AAGUID.
+   */
+  aaguidAllowList: z.array(z.string()).default([]),
+  /** Authenticator models that may not register, by AAGUID. Applied before the allow list. */
+  aaguidDenyList: z.array(z.string()).default([]),
 });
 
 export type AuthenticatorPolicy = z.infer<typeof AuthenticatorPolicySchema>;
@@ -129,6 +158,9 @@ export const DefaultAuthenticatorPolicy = {
   userVerification: 'required',
   attestation: 'none',
   requireKnownAuthenticator: false,
+  syncedPasskeys: 'block',
+  aaguidAllowList: [],
+  aaguidDenyList: [],
 } as const;
 
 const DurationSchema = z.string().regex(/^\d+[smhd]$/);
@@ -141,7 +173,11 @@ export const SystemConfigSchema = z.object({
   passkey_login_fallback_enabled: z.boolean(),
   oauth_providers: z.array(OAuthProviderConfigSchema).default([]),
   lockout_policy: LockoutPolicySchema.default(DefaultLockoutPolicy),
-  authenticator_policy: AuthenticatorPolicySchema.default(DefaultAuthenticatorPolicy),
+  // Derived from the field defaults rather than restated, so the two cannot drift.
+  // DefaultAuthenticatorPolicy stays exported for consumers that need the shape.
+  authenticator_policy: AuthenticatorPolicySchema.default(() =>
+    AuthenticatorPolicySchema.parse({}),
+  ),
 
   access_token_ttl: z.string().regex(/^\d+[smhd]$/),
 
