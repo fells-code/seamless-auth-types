@@ -80,3 +80,39 @@ export const WebAuthnTokenSuccessSchema = z.object({
 });
 
 export type WebAuthnTokenSuccessResponse = z.infer<typeof WebAuthnTokenSuccessSchema>;
+
+/**
+ * Machine-readable codes the auth API returns as the whole of an error body's
+ * `error` field, for WebAuthn failures a client can act on.
+ *
+ * Published here for the same reason as `OAUTH_ERROR_CODES`: a consumer that
+ * declares its own copy has no way to find out when the API adds a code, and
+ * degrades to generic messaging with nothing failing anywhere. Checking a local
+ * map against this union with `Record<WebAuthnErrorCode, true>` turns that into
+ * a compile error.
+ *
+ * The remaining WebAuthn failures answer with prose rather than a code, so they
+ * are deliberately absent rather than forgotten.
+ */
+export const WEBAUTHN_ERROR_CODES = [
+  /** Registration asked for an attachment the deployment's policy does not allow. */
+  'attachment_not_allowed',
+  /** The credential is backup eligible and the deployment blocks synced passkeys. */
+  'synced_passkey_not_allowed',
+  /** The authenticator model is denied, or absent from a non-empty allow list. */
+  'authenticator_not_allowed',
+  /** Registration required a PRF-capable credential and the one offered was not. */
+  'prf_required',
+  /** An assertion carried PRF output, which must never leave the client. */
+  'prf_output_not_allowed',
+] as const;
+
+export const WebAuthnErrorCodeSchema = z.enum(WEBAUTHN_ERROR_CODES);
+
+export type WebAuthnErrorCode = z.infer<typeof WebAuthnErrorCodeSchema>;
+
+export const WebAuthnErrorResponseSchema = z.object({
+  error: z.string(),
+});
+
+export type WebAuthnErrorResponse = z.infer<typeof WebAuthnErrorResponseSchema>;

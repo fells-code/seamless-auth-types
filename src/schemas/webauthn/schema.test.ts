@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  WEBAUTHN_ERROR_CODES,
   WebAuthnAssertionStartSchema,
+  WebAuthnErrorCodeSchema,
   WebAuthnRegisterFinishSchema,
   WebAuthnRegisterStartQuerySchema,
 } from './schema.js';
+import type { WebAuthnErrorCode } from './schema.js';
 
 describe('WebAuthnRegisterStartQuerySchema', () => {
   it('coerces the string form query values', () => {
@@ -52,5 +55,32 @@ describe('WebAuthnRegisterFinishSchema', () => {
 
   it('requires the attestation response', () => {
     expect(() => WebAuthnRegisterFinishSchema.parse({})).toThrow();
+  });
+});
+
+describe('WebAuthnErrorCodeSchema', () => {
+  it('accepts every published code', () => {
+    for (const code of WEBAUTHN_ERROR_CODES) {
+      expect(WebAuthnErrorCodeSchema.parse(code)).toBe(code);
+    }
+  });
+
+  it('rejects a code it does not publish', () => {
+    expect(() => WebAuthnErrorCodeSchema.parse('not_a_real_code')).toThrow();
+  });
+
+  // The point of publishing the union: a consumer's own map is checked against it
+  // and stops compiling when the API adds a code. This asserts the union and the
+  // list stay in step, which is what makes that check meaningful.
+  it('keeps the union and the list in step', () => {
+    const everyCode: Record<WebAuthnErrorCode, true> = {
+      attachment_not_allowed: true,
+      synced_passkey_not_allowed: true,
+      authenticator_not_allowed: true,
+      prf_required: true,
+      prf_output_not_allowed: true,
+    };
+
+    expect(Object.keys(everyCode).sort()).toEqual([...WEBAUTHN_ERROR_CODES].sort());
   });
 });
