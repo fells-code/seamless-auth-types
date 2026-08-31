@@ -76,6 +76,62 @@ describe('OAuthProviderUpdateSchema', () => {
   });
 });
 
+describe('magic_link_redirect_uris', () => {
+  it('defaults to empty, so a config predating the key parses unchanged', () => {
+    expect(SystemConfigSchema.parse(baseConfig).magic_link_redirect_uris).toEqual([]);
+  });
+
+  it('accepts an application scheme, which is the case it exists for', () => {
+    const parsed = SystemConfigSchema.parse({
+      ...baseConfig,
+      magic_link_redirect_uris: ['myapp://auth/magic', 'com.example.app://callback'],
+    });
+
+    expect(parsed.magic_link_redirect_uris).toEqual([
+      'myapp://auth/magic',
+      'com.example.app://callback',
+    ]);
+  });
+
+  it('accepts a universal link on a host that is not a configured origin', () => {
+    const parsed = SystemConfigSchema.parse({
+      ...baseConfig,
+      magic_link_redirect_uris: ['https://links.example.com/m'],
+    });
+
+    expect(parsed.magic_link_redirect_uris).toEqual(['https://links.example.com/m']);
+  });
+
+  // z.url() alone accepts these. A magic link target is rendered as an href in an
+  // email, so a javascript: or data: entry reachable through the admin API would be a
+  // script-execution sink.
+  it.each(['javascript:alert(1)', 'data:text/html,<script>x</script>', 'file:///etc/passwd'])(
+    'rejects %s',
+    (uri) => {
+      expect(
+        SystemConfigSchema.safeParse({ ...baseConfig, magic_link_redirect_uris: [uri] }).success,
+      ).toBe(false);
+    },
+  );
+
+  it('rejects a value that is not a URL at all', () => {
+    expect(
+      SystemConfigSchema.safeParse({ ...baseConfig, magic_link_redirect_uris: ['not a url'] })
+        .success,
+    ).toBe(false);
+  });
+
+  it('guards the patch surface the admin API writes through', () => {
+    expect(
+      SystemConfigPatchSchema.safeParse({ magic_link_redirect_uris: ['javascript:alert(1)'] })
+        .success,
+    ).toBe(false);
+    expect(
+      SystemConfigPatchSchema.safeParse({ magic_link_redirect_uris: ['myapp://auth'] }).success,
+    ).toBe(true);
+  });
+});
+
 describe('SystemConfigSchema', () => {
   it('applies the default lockout policy', () => {
     const parsed = SystemConfigSchema.parse(baseConfig);
