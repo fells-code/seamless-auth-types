@@ -191,6 +191,20 @@ export const SystemConfigSchema = z.object({
   session_idle_ttl: DurationSchema.default('8h'),
   refresh_token_ttl: z.string().regex(/^\d+[smhd]$/),
 
+  /**
+   * How many sessions one user may hold at once, or `null` for no limit.
+   *
+   * `null` rather than `0` for unlimited, so a deployment cannot express "no
+   * sessions allowed" by accident and the absence of a limit reads as an absence
+   * rather than as a magic number. Defaults to `null`, which is what every
+   * deployment predating this key already behaves like.
+   *
+   * NIST 800-53 AC-10. Also an operational concern wherever workstations are
+   * shared, since an unbounded count leaves sessions alive on machines the user
+   * has walked away from.
+   */
+  max_concurrent_sessions: z.number().int().positive().nullable().default(null),
+
   rate_limit: z.number().int().positive(),
   delay_after: z.number().int().nonnegative(),
 
@@ -216,6 +230,7 @@ export const SystemConfigPatchSchema = z
     access_token_ttl: SystemConfigSchema.shape.access_token_ttl.optional(),
     session_idle_ttl: DurationSchema.optional(),
     refresh_token_ttl: SystemConfigSchema.shape.refresh_token_ttl.optional(),
+    max_concurrent_sessions: z.number().int().positive().nullable().optional(),
     rate_limit: SystemConfigSchema.shape.rate_limit.optional(),
     delay_after: SystemConfigSchema.shape.delay_after.optional(),
     rpid: SystemConfigSchema.shape.rpid.optional(),

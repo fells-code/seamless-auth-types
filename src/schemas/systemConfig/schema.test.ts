@@ -221,6 +221,50 @@ describe('SystemConfigSchema authenticator_policy', () => {
   });
 });
 
+describe('SystemConfigSchema max_concurrent_sessions', () => {
+  it('defaults to no limit when config predates the key', () => {
+    expect(SystemConfigSchema.parse(baseConfig).max_concurrent_sessions).toBeNull();
+  });
+
+  it('keeps a configured limit', () => {
+    const parsed = SystemConfigSchema.parse({ ...baseConfig, max_concurrent_sessions: 3 });
+
+    expect(parsed.max_concurrent_sessions).toBe(3);
+  });
+
+  it('accepts an explicit null as no limit', () => {
+    const parsed = SystemConfigSchema.parse({ ...baseConfig, max_concurrent_sessions: null });
+
+    expect(parsed.max_concurrent_sessions).toBeNull();
+  });
+
+  // Unlimited is expressed as null, so zero would otherwise read as "no sessions
+  // allowed" and lock every user out of a deployment that meant to remove the cap.
+  it('rejects zero', () => {
+    expect(
+      SystemConfigSchema.safeParse({ ...baseConfig, max_concurrent_sessions: 0 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a negative or fractional limit', () => {
+    expect(
+      SystemConfigSchema.safeParse({ ...baseConfig, max_concurrent_sessions: -1 }).success,
+    ).toBe(false);
+    expect(
+      SystemConfigSchema.safeParse({ ...baseConfig, max_concurrent_sessions: 2.5 }).success,
+    ).toBe(false);
+  });
+
+  it('is patchable, including back to no limit', () => {
+    expect(SystemConfigPatchSchema.safeParse({ max_concurrent_sessions: 5 }).success).toBe(true);
+    expect(SystemConfigPatchSchema.safeParse({ max_concurrent_sessions: null }).success).toBe(true);
+  });
+
+  it('refuses a zero limit through a patch as well', () => {
+    expect(SystemConfigPatchSchema.safeParse({ max_concurrent_sessions: 0 }).success).toBe(false);
+  });
+});
+
 describe('SystemConfigSchema session_idle_ttl', () => {
   it('defaults when config predates the key', () => {
     expect(SystemConfigSchema.parse(baseConfig).session_idle_ttl).toBe('8h');
