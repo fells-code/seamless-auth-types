@@ -11,6 +11,38 @@ export const LoginMethodSchema = z.enum([
 
 export type LoginMethod = z.infer<typeof LoginMethodSchema>;
 
+/**
+ * Schemes that must never be a redirect target.
+ *
+ * `z.url()` accepts anything the URL parser does, which includes
+ * `javascript:alert(1)` and `data:text/html,...`. A magic link target is rendered as
+ * an href in an email, so one of those stored in config would be a script-execution
+ * sink reachable through the admin API. Denied rather than allowlisted because the
+ * point of this list is to permit arbitrary application schemes (`myapp://`), which
+ * an allowlist of known-good schemes could not express.
+ */
+const DENIED_REDIRECT_PROTOCOLS = new Set([
+  'javascript:',
+  'data:',
+  'vbscript:',
+  'file:',
+  'blob:',
+  'about:',
+]);
+
+export const RedirectTargetSchema = z.url().refine(
+  (value) => {
+    try {
+      return !DENIED_REDIRECT_PROTOCOLS.has(new URL(value).protocol.toLowerCase());
+    } catch {
+      return false;
+    }
+  },
+  { message: 'Redirect target uses a scheme that cannot be a link destination' },
+);
+
+export type RedirectTarget = z.infer<typeof RedirectTargetSchema>;
+
 export const OAuthProviderIdSchema = z.string().regex(/^[a-z0-9-]{2,40}$/);
 
 export type OAuthProviderId = z.infer<typeof OAuthProviderIdSchema>;
@@ -212,6 +244,17 @@ export const SystemConfigSchema = z.object({
   origins: z.array(z.url()).min(1),
 
   frontend_url: z.url().optional(),
+
+  /**
+   * Exact-match destinations a magic link may be sent to, beyond what `origins`
+   * already covers. Empty by default, which leaves the server comparing a requested
+   * target against `origins` as it did before this key existed.
+   *
+   * Exact match rather than origin comparison, because the cases this exists for have
+   * no origin to compare: a custom scheme such as `myapp://auth`, or a universal link
+   * on a host that should not also be a WebAuthn origin.
+   */
+  magic_link_redirect_uris: z.array(RedirectTargetSchema).default([]),
 });
 
 export type SystemConfig = z.infer<typeof SystemConfigSchema>;
@@ -235,6 +278,7 @@ export const SystemConfigPatchSchema = z
     delay_after: SystemConfigSchema.shape.delay_after.optional(),
     rpid: SystemConfigSchema.shape.rpid.optional(),
     origins: SystemConfigSchema.shape.origins.optional(),
+    magic_link_redirect_uris: z.array(RedirectTargetSchema).optional(),
   })
   .strict();
 
