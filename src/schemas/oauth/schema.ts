@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { RefreshSuccessResponseSchema } from '../auth/auth.schema.js';
-import { OAuthProviderIdSchema } from '../systemConfig/schema.js';
+import { OAuthProviderIdSchema, RedirectTargetSchema } from '../systemConfig/schema.js';
 
 export const OAuthProviderParamSchema = z.object({
   providerId: OAuthProviderIdSchema,
@@ -25,7 +25,7 @@ export type OAuthProvidersResponse = z.infer<typeof OAuthProvidersResponseSchema
 
 export const StartOAuthLoginRequestSchema = z.object({
   redirectUri: z.url().optional(),
-  returnTo: z.url().optional(),
+  returnTo: RedirectTargetSchema.optional(),
 });
 
 export type StartOAuthLoginRequest = z.infer<typeof StartOAuthLoginRequestSchema>;
@@ -47,6 +47,17 @@ export type FinishOAuthLoginRequest = z.infer<typeof FinishOAuthLoginRequestSche
 
 export const OAuthLoginSuccessResponseSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
+}).extend({
+  /**
+   * Where the caller asked to be sent once the flow completes.
+   *
+   * Read back out of the signed state rather than from the callback request, so it is
+   * the value the authorization server accepted at `/start` and not one introduced at
+   * the end of the round trip. Present only when the caller supplied one and it passed
+   * validation there, so a client treats absence as "use my own default" rather than
+   * as an error.
+   */
+  returnTo: RedirectTargetSchema.optional(),
 });
 
 export type OAuthLoginSuccessResponse = z.infer<typeof OAuthLoginSuccessResponseSchema>;
