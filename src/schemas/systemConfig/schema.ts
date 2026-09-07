@@ -165,10 +165,18 @@ export const AuthenticatorPolicySchema = z.object({
    * exactly what a consumer wants and exactly what an organisation issuing its
    * own authenticators does not.
    *
+   * `allow` is the default because it is the only value under which a stock
+   * deployment enrols the passkey a normal device actually offers. Every iCloud
+   * Keychain and Google Password Manager credential is multi-device, so
+   * defaulting to `block` refuses the common case and makes a first registration
+   * fail on hardware the operator has no way to change. An organisation issuing
+   * its own authenticators sets `block`, which is a deliberate posture rather
+   * than something to be inherited by accident.
+   *
    * Judged on backup eligibility rather than current backup state: a credential
    * that *can* sync is the exposure, whether or not it has yet.
    */
-  syncedPasskeys: SyncedPasskeyPolicySchema.default('block'),
+  syncedPasskeys: SyncedPasskeyPolicySchema.default('allow'),
   /**
    * Authenticator models that may register, by AAGUID.
    *
@@ -190,7 +198,7 @@ export const DefaultAuthenticatorPolicy = {
   userVerification: 'required',
   attestation: 'none',
   requireKnownAuthenticator: false,
-  syncedPasskeys: 'block',
+  syncedPasskeys: 'allow',
   aaguidAllowList: [],
   aaguidDenyList: [],
 } as const;

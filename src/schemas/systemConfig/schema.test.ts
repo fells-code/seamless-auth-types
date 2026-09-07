@@ -227,7 +227,7 @@ describe('AuthenticatorPolicySchema', () => {
       userVerification: 'required',
       attestation: 'none',
       requireKnownAuthenticator: false,
-      syncedPasskeys: 'block',
+      syncedPasskeys: 'allow',
       aaguidAllowList: [],
       aaguidDenyList: [],
     });
@@ -253,7 +253,7 @@ describe('SystemConfigSchema authenticator_policy', () => {
       userVerification: 'required',
       attestation: 'none',
       requireKnownAuthenticator: false,
-      syncedPasskeys: 'block',
+      syncedPasskeys: 'allow',
       aaguidAllowList: [],
       aaguidDenyList: [],
     });
@@ -404,13 +404,13 @@ describe('AuthenticatorPolicySchema attestation', () => {
 });
 
 describe('AuthenticatorPolicySchema synced passkeys', () => {
-  it('blocks credentials that can leave the device by default', () => {
-    expect(AuthenticatorPolicySchema.parse({}).syncedPasskeys).toBe('block');
+  it('admits credentials that can leave the device by default', () => {
+    expect(AuthenticatorPolicySchema.parse({}).syncedPasskeys).toBe('allow');
   });
 
-  it('can be relaxed for a consumer deployment', () => {
-    expect(AuthenticatorPolicySchema.parse({ syncedPasskeys: 'allow' }).syncedPasskeys).toBe(
-      'allow',
+  it('can be tightened for a deployment issuing its own authenticators', () => {
+    expect(AuthenticatorPolicySchema.parse({ syncedPasskeys: 'block' }).syncedPasskeys).toBe(
+      'block',
     );
   });
 
