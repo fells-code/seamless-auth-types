@@ -56,13 +56,11 @@ jobs:
         run: npm run check-npm-build
 
       - name: Version or publish package
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          version: npm run version-packages
-          publish: npm run release:stable
-          createGithubReleases: true
+          version-script: npm run version-packages
+          publish-script: npm run release:stable
+          create-github-releases: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
