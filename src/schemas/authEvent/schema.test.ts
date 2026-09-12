@@ -40,6 +40,48 @@ describe('AuthEventSchema', () => {
     expect(() => AuthEventSchema.parse(rest)).not.toThrow();
   });
 
+  // The telemetry dimensions seamless-auth-api records on every row. Optional
+  // and nullable, so an event written before they existed still parses.
+  it('carries the telemetry dimensions and keeps them', () => {
+    const parsed = AuthEventSchema.parse({
+      ...baseEvent,
+      deployment_id: 'gen-42',
+      device_class: 'ios',
+      mail_provider: 'gmail',
+      owner: false,
+      attempt_id: '55555555-5555-5555-5555-555555555555',
+    });
+
+    expect(parsed).toMatchObject({
+      deployment_id: 'gen-42',
+      device_class: 'ios',
+      mail_provider: 'gmail',
+      owner: false,
+      attempt_id: '55555555-5555-5555-5555-555555555555',
+    });
+  });
+
+  it('accepts null for every telemetry dimension, and a class it has not heard of', () => {
+    expect(() =>
+      AuthEventSchema.parse({
+        ...baseEvent,
+        deployment_id: null,
+        device_class: null,
+        mail_provider: null,
+        owner: null,
+        attempt_id: null,
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      AuthEventSchema.parse({ ...baseEvent, device_class: 'visionos', mail_provider: 'hey' }),
+    ).not.toThrow();
+  });
+
+  it('rejects an owner flag that is not a boolean', () => {
+    expect(() => AuthEventSchema.parse({ ...baseEvent, owner: 'yes' })).toThrow();
+  });
+
   it('fails if required fields are missing', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...rest } = baseEvent;
