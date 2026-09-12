@@ -106,6 +106,35 @@ export const AuthEventSchema = z.object({
   type: z.string(),
   ip_address: z.string().nullable().optional(),
   user_agent: z.string().nullable().optional(),
+  /**
+   * Which deployment wrote the row (the server's `APP_ID`), so rows collected
+   * across a fleet stay attributable. Null on rows written before the column
+   * existed.
+   */
+  deployment_id: z.string().nullable().optional(),
+  /**
+   * The platform family the user agent folds into: `ios`, `android`, `macos`,
+   * `windows`, `linux`, `chromeos`, `bot` or `unknown`. A plain string rather
+   * than an enum for the same reason `type` is: a newer server may add a class
+   * an older consumer has not heard of.
+   */
+  device_class: z.string().nullable().optional(),
+  /**
+   * The subject's mail provider (`gmail`, `outlook`, `other`, ...), never the
+   * domain. Null when the row does not know who the subject is.
+   */
+  mail_provider: z.string().nullable().optional(),
+  /**
+   * Whether the subject is a configured owner of the deployment. Null when the
+   * subject is unknown, which is different from a known non-owner.
+   */
+  owner: z.boolean().nullable().optional(),
+  /**
+   * The sign-in or registration attempt the row belongs to: the ephemeral
+   * token's `jti`. Every step taken on one token carries the same id. Null on
+   * rows written from an access session and on rows older than the claim.
+   */
+  attempt_id: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).nullable(),
   created_at: IsoDate,
   updated_at: IsoDate,
