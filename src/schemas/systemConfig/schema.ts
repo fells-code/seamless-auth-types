@@ -97,6 +97,59 @@ export const DefaultLockoutPolicy = {
   lockoutSeconds: 15 * 60,
 } as const;
 
+const PerIpLimitSchema = z.number().int().positive();
+
+/**
+ * How many times one caller may start a message-carrying or provider flow per
+ * window, before the general `rate_limit` applies to everything else.
+ *
+ * Two keys per flow because they guard different things. `perIdentity` bounds
+ * how often one address or phone can be messaged, which is the abuse a sender
+ * cares about. `perIp` bounds how many distinct addresses one network location
+ * can drive, which is the enumeration and spam guard. The per-IP values were
+ * fixed constants before this key existed, and those constants are the defaults
+ * here, so a deployment that sets nothing behaves as it did.
+ *
+ * Per-IP limits are the ones a native app runs into first. Mobile carriers put
+ * thousands of subscribers behind one address, so a value that never troubles a
+ * web audience can refuse a mobile audience at modest scale. Raise `perIp` for a
+ * deployment that serves phones; leave `perIdentity` where it is.
+ */
+export const FlowRateLimitsSchema = z.object({
+  windowSeconds: z
+    .number()
+    .int()
+    .positive()
+    .default(15 * 60),
+  otp: z
+    .object({
+      perIp: PerIpLimitSchema.default(10),
+      perIdentity: PerIpLimitSchema.default(5),
+    })
+    .default({ perIp: 10, perIdentity: 5 }),
+  magicLink: z
+    .object({
+      perIp: PerIpLimitSchema.default(20),
+      perIdentity: PerIpLimitSchema.default(5),
+    })
+    .default({ perIp: 20, perIdentity: 5 }),
+  oauth: z
+    .object({
+      perIp: PerIpLimitSchema.default(30),
+      perProvider: PerIpLimitSchema.default(10),
+    })
+    .default({ perIp: 30, perProvider: 10 }),
+});
+
+export type FlowRateLimits = z.infer<typeof FlowRateLimitsSchema>;
+
+export const DefaultFlowRateLimits = {
+  windowSeconds: 15 * 60,
+  otp: { perIp: 10, perIdentity: 5 },
+  magicLink: { perIp: 20, perIdentity: 5 },
+  oauth: { perIp: 30, perProvider: 10 },
+} as const;
+
 export const AuthenticatorAttachmentPolicySchema = z.enum(['any', 'platform', 'cross-platform']);
 
 export type AuthenticatorAttachmentPolicy = z.infer<typeof AuthenticatorAttachmentPolicySchema>;
@@ -247,8 +300,18 @@ export const SystemConfigSchema = z.object({
 
   rate_limit: z.number().int().positive(),
   delay_after: z.number().int().nonnegative(),
+  flow_rate_limits: FlowRateLimitsSchema.default(DefaultFlowRateLimits),
 
   rpid: z.string().min(1),
+  /**
+   * The WebAuthn origins this deployment accepts, and the fallback for the magic
+   * link and OAuth destinations (`origins[0]`), so the web origin belongs first.
+   *
+   * `z.url()` here is deliberately loose. An Android app's WebAuthn origin is
+   * `android:apk-key-hash:<base64url>`, which is a valid URL with an opaque path
+   * and no host, and it must be accepted here for native passkeys to verify. Do
+   * not tighten this to a hostname check without carrying that form along.
+   */
   origins: z.array(z.url()).min(1),
 
   frontend_url: z.url().optional(),
@@ -284,6 +347,7 @@ export const SystemConfigPatchSchema = z
     max_concurrent_sessions: z.number().int().positive().nullable().optional(),
     rate_limit: SystemConfigSchema.shape.rate_limit.optional(),
     delay_after: SystemConfigSchema.shape.delay_after.optional(),
+    flow_rate_limits: FlowRateLimitsSchema.optional(),
     rpid: SystemConfigSchema.shape.rpid.optional(),
     origins: SystemConfigSchema.shape.origins.optional(),
     magic_link_redirect_uris: z.array(RedirectTargetSchema).optional(),
