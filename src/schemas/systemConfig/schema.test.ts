@@ -155,6 +155,46 @@ describe('SystemConfigSchema', () => {
   it('rejects a non-URL origin', () => {
     expect(() => SystemConfigSchema.parse({ ...baseConfig, origins: ['example.com'] })).toThrow();
   });
+
+  // Android reports a WebAuthn origin with no host, and native passkeys verify
+  // against it. Pinned so a stricter origin check cannot quietly break them.
+  it('accepts the Android APK key hash origin form', () => {
+    const origins = [
+      'https://example.com',
+      'android:apk-key-hash:pNiP5iKyQ8JwgGOaKA1zGPUPJIS-0H1xKCQcfIoGLck',
+    ];
+
+    expect(SystemConfigSchema.parse({ ...baseConfig, origins }).origins).toEqual(origins);
+  });
+
+  it('applies the historical constants as the default flow rate limits', () => {
+    expect(SystemConfigSchema.parse(baseConfig).flow_rate_limits).toEqual({
+      windowSeconds: 900,
+      otp: { perIp: 10, perIdentity: 5 },
+      magicLink: { perIp: 20, perIdentity: 5 },
+      oauth: { perIp: 30, perProvider: 10 },
+    });
+  });
+
+  it('fills the flows a partial flow_rate_limits leaves out', () => {
+    const parsed = SystemConfigSchema.parse({
+      ...baseConfig,
+      flow_rate_limits: { otp: { perIp: 200 } },
+    });
+
+    expect(parsed.flow_rate_limits.otp).toEqual({ perIp: 200, perIdentity: 5 });
+    expect(parsed.flow_rate_limits.magicLink).toEqual({ perIp: 20, perIdentity: 5 });
+    expect(parsed.flow_rate_limits.windowSeconds).toBe(900);
+  });
+
+  it.each([
+    [{ otp: { perIp: 0 } }],
+    [{ magicLink: { perIdentity: -1 } }],
+    [{ windowSeconds: 1.5 }],
+    [{ oauth: { perProvider: 'many' } }],
+  ])('rejects the flow rate limit %j', (flow_rate_limits) => {
+    expect(() => SystemConfigSchema.parse({ ...baseConfig, flow_rate_limits })).toThrow();
+  });
 });
 
 describe('SystemConfigPatchSchema', () => {
