@@ -30,8 +30,11 @@ export const UpdateOrganizationRequestSchema = z.object({
 
 export type UpdateOrganizationRequest = z.infer<typeof UpdateOrganizationRequestSchema>;
 
-const MembershipRoleSchema = z.string().trim().min(1).max(80);
-const MembershipScopeSchema = z.string().trim().min(1).max(120);
+export const MembershipRoleSchema = z.string().trim().min(1).max(80);
+export const MembershipScopeSchema = z.string().trim().min(1).max(120);
+
+export type MembershipRole = z.infer<typeof MembershipRoleSchema>;
+export type MembershipScope = z.infer<typeof MembershipScopeSchema>;
 
 export const AddOrganizationMemberRequestSchema = z
   .object({

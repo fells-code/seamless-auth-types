@@ -17,3 +17,4 @@ export * from './schemas/organization/schema.js';
 export * from './schemas/me/schema.js';
 export * from './schemas/metrics/schema.js';
 export * from './schemas/admin/schema.js';
+export * from './schemas/userImport/schema.js';
