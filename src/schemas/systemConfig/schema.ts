@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserImportSourceSchema } from '../userImport/schema.js';
 import { RoleNameSchema } from '../role/schema.js';
 
 export const LoginMethodSchema = z.enum([
@@ -69,6 +70,21 @@ export const OAuthProviderConfigSchema = z.object({
   accountLinking: z.enum(['email', 'disabled']).default('email'),
   requireEmailVerified: z.boolean().default(false),
   pkce: z.boolean().optional(),
+  /**
+   * OpenID Connect. With `issuer` and `jwksUri` set, the token response must carry an
+   * ID token, which is verified (signature, issuer, audience, expiry and nonce) and
+   * read for the profile claims instead of calling `userInfoUrl`.
+   */
+  issuer: z.url().optional(),
+  jwksUri: z.url().optional(),
+  /**
+   * Links a first sign-in to a user imported under this source (see
+   * `ImportUsersRequestSchema`) whose external id equals the ID token claim at
+   * `externalIdJsonPath`, such as Entra ID's `oid`. Only honoured for a provider with
+   * `issuer` and `jwksUri`, since the claim must come from a verified ID token.
+   */
+  externalIdSource: UserImportSourceSchema.optional(),
+  externalIdJsonPath: z.string().trim().min(1).optional(),
 });
 
 export type OAuthProviderConfig = z.infer<typeof OAuthProviderConfigSchema>;
