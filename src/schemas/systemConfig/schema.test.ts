@@ -58,6 +58,31 @@ describe('OAuthProviderConfigSchema', () => {
       OAuthProviderConfigSchema.parse({ ...baseProvider, tokenUrl: 'not-a-url' }),
     ).toThrow();
   });
+
+  it('accepts OpenID Connect and imported-id linking settings', () => {
+    const parsed = OAuthProviderConfigSchema.parse({
+      ...baseProvider,
+      issuer: 'https://login.microsoftonline.com/tenant-id/v2.0',
+      jwksUri: 'https://login.microsoftonline.com/tenant-id/discovery/v2.0/keys',
+      externalIdSource: 'entra-id',
+      externalIdJsonPath: 'oid',
+    });
+
+    expect(parsed).toMatchObject({ externalIdSource: 'entra-id', externalIdJsonPath: 'oid' });
+  });
+
+  it('leaves the OpenID Connect settings unset by default', () => {
+    const parsed = OAuthProviderConfigSchema.parse(baseProvider);
+
+    expect(parsed.issuer).toBeUndefined();
+    expect(parsed.externalIdSource).toBeUndefined();
+  });
+
+  it('rejects an external id source that is not an import source name', () => {
+    expect(() =>
+      OAuthProviderConfigSchema.parse({ ...baseProvider, externalIdSource: 'Entra ID' }),
+    ).toThrow();
+  });
 });
 
 describe('OAuthProviderUpdateSchema', () => {
