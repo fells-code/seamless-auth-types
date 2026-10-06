@@ -94,10 +94,21 @@ describe('OAuthProviderUpdateSchema', () => {
     expect(OAuthProviderUpdateSchema.parse({ enabled: false }).enabled).toBe(false);
   });
 
-  // Optional fields that carry a default still resolve to that default, so a
-  // caller merging a patch must merge the raw body rather than the parsed one.
-  it('fills defaults for the fields the caller omitted', () => {
-    expect(OAuthProviderUpdateSchema.parse({ enabled: false }).subjectJsonPath).toBe('sub');
+  // The server merges the parsed patch over the stored provider, so a default filled
+  // in here would overwrite a setting the caller never mentioned.
+  it('parses to exactly the fields the caller sent', () => {
+    expect(OAuthProviderUpdateSchema.parse({ enabled: false })).toEqual({ enabled: false });
+  });
+
+  it('keeps an explicitly sent value that equals the default', () => {
+    expect(OAuthProviderUpdateSchema.parse({ accountLinking: 'email' })).toEqual({
+      accountLinking: 'email',
+    });
+  });
+
+  it('still validates the fields it is given', () => {
+    expect(() => OAuthProviderUpdateSchema.parse({ accountLinking: 'always' })).toThrow();
+    expect(() => OAuthProviderUpdateSchema.parse({ scopes: [''] })).toThrow();
   });
 
   it('rejects an attempt to change the id', () => {
