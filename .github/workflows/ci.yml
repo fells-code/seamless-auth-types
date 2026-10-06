@@ -17,10 +17,17 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint, typecheck, test, build
+    name: Lint, typecheck, test, build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     env:
       HUSKY: 0
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The supported range is engines >=22: the oldest supported LTS, the
+        # development default from .nvmrc, and the newest release.
+        node-version: [22, 24, latest]
 
     steps:
       - name: Checkout
@@ -31,7 +38,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version-file: '.nvmrc'
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
@@ -59,3 +66,14 @@ jobs:
 
       - name: Verify package contents
         run: npm run check-npm-build
+
+  # The ruleset on main requires a check with this exact name, which a matrix
+  # job no longer reports, so this job reports it once every leg is done.
+  ci-result:
+    name: Lint, typecheck, test, build
+    needs: ci
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every Node version to pass
+        run: test "${{ needs.ci.result }}" = success
