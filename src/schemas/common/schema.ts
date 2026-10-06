@@ -31,3 +31,9 @@ export type InvalidPayloadResponse = z.infer<typeof InvalidPayloadResponseSchema
 export const MetadataSchema = z.record(z.string(), z.unknown()).nullable().optional();
 
 export type Metadata = z.infer<typeof MetadataSchema>;
+
+// Lives here rather than with the provider config so organization schemas can use it
+// without importing system config, which imports them back through user import.
+export const OAuthProviderIdSchema = z.string().regex(/^[a-z0-9-]{2,40}$/);
+
+export type OAuthProviderId = z.infer<typeof OAuthProviderIdSchema>;

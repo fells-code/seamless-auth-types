@@ -1,12 +1,18 @@
 import { z } from 'zod';
 import { IsoDate } from '../../shared.js';
-import { MetadataSchema } from '../common/schema.js';
+import { MetadataSchema, OAuthProviderIdSchema } from '../common/schema.js';
 
 export const OrganizationIdParamSchema = z.object({
   organizationId: z.uuid(),
 });
 
 export type OrganizationIdParam = z.infer<typeof OrganizationIdParamSchema>;
+
+export const OrganizationOAuthProviderParamSchema = OrganizationIdParamSchema.extend({
+  providerId: OAuthProviderIdSchema,
+});
+
+export type OrganizationOAuthProviderParam = z.infer<typeof OrganizationOAuthProviderParamSchema>;
 
 export const OrganizationMemberParamSchema = OrganizationIdParamSchema.extend({
   userId: z.uuid(),
@@ -86,6 +92,11 @@ export const OrganizationSchema = z.object({
   updatedAt: IsoDate,
   membership: OrganizationMembershipSchema.optional(),
   memberCount: z.number().int().nonnegative().optional(),
+  /**
+   * OAuth providers this organization's members can no longer sign in with, for cutting
+   * over from a legacy identity provider.
+   */
+  retiredOAuthProviders: z.array(OAuthProviderIdSchema).optional(),
 });
 
 export type Organization = z.infer<typeof OrganizationSchema>;

@@ -78,6 +78,10 @@ describe('OAuthProviderConfigSchema', () => {
     expect(parsed.externalIdSource).toBeUndefined();
   });
 
+  it('leaves passkey enrollment prompting off by default', () => {
+    expect(OAuthProviderConfigSchema.parse(baseProvider).promptPasskeyEnrollment).toBe(false);
+  });
+
   it('rejects an external id source that is not an import source name', () => {
     expect(() =>
       OAuthProviderConfigSchema.parse({ ...baseProvider, externalIdSource: 'Entra ID' }),
