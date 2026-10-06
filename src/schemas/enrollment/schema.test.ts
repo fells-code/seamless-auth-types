@@ -57,6 +57,12 @@ describe('AdminEnrollmentQuerySchema', () => {
 
     expect(parsed).toMatchObject({ imported: true, status: 'none', limit: 25, offset: 0 });
   });
+
+  it('gives the same answer when parsing an already parsed query', () => {
+    const once = AdminEnrollmentQuerySchema.parse({ imported: 'false', limit: '25' });
+
+    expect(AdminEnrollmentQuerySchema.parse(once)).toEqual(once);
+  });
 });
 
 describe('enrollment results', () => {

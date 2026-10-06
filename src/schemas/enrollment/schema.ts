@@ -13,7 +13,12 @@ export const EnrollmentStatusSchema = z.enum(['none', 'one', 'two_or_more']);
 
 export type EnrollmentStatus = z.infer<typeof EnrollmentStatusSchema>;
 
-const BooleanQuerySchema = z.enum(['true', 'false']).transform((value) => value === 'true');
+// Accepts the parsed boolean as well as the query string, so parsing an already
+// parsed query (as the server does to recover coerced types) gives the same answer.
+const BooleanQuerySchema = z.union([
+  z.boolean(),
+  z.enum(['true', 'false']).transform((value) => value === 'true'),
+]);
 
 export const AdminEnrollmentQuerySchema = PaginationQuerySchema.extend({
   organizationId: z.uuid().optional(),
