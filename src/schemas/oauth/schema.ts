@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RefreshSuccessResponseSchema } from '../auth/auth.schema.js';
+import { NextStepSchema, RefreshSuccessResponseSchema } from '../auth/auth.schema.js';
 import { OAuthProviderIdSchema } from '../common/schema.js';
 import { RedirectTargetSchema } from '../systemConfig/schema.js';
 
@@ -65,7 +65,7 @@ export const OAuthLoginSuccessResponseSchema = RefreshSuccessResponseSchema.omit
    * the user into passkey enrollment before the app. Absent means there is nothing
    * further to do.
    */
-  nextStep: z.enum(['enroll_passkey']).optional(),
+  nextStep: NextStepSchema.optional(),
 });
 
 export type OAuthLoginSuccessResponse = z.infer<typeof OAuthLoginSuccessResponseSchema>;

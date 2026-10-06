@@ -283,6 +283,13 @@ export const SystemConfigSchema = z.object({
   available_roles: z.array(RoleNameSchema).min(1),
   login_methods: z.array(LoginMethodSchema).min(1),
   passkey_login_fallback_enabled: z.boolean(),
+  /**
+   * After an email or phone code sign-in, or a magic link sign-in, by a user with no
+   * passkey, the session response carries `nextStep: 'enroll_passkey'`. For moving an
+   * organization onto passkeys, for example after importing its users. OAuth
+   * providers have their own `promptPasskeyEnrollment`.
+   */
+  prompt_passkey_enrollment: z.boolean().default(false),
   oauth_providers: z.array(OAuthProviderConfigSchema).default([]),
   lockout_policy: LockoutPolicySchema.default(DefaultLockoutPolicy),
   // Derived from the field defaults rather than restated, so the two cannot drift.
@@ -357,6 +364,7 @@ export const SystemConfigPatchSchema = z
     login_methods: SystemConfigSchema.shape.login_methods.optional(),
     passkey_login_fallback_enabled:
       SystemConfigSchema.shape.passkey_login_fallback_enabled.optional(),
+    prompt_passkey_enrollment: z.boolean().optional(),
     oauth_providers: z.array(OAuthProviderConfigSchema).optional(),
     lockout_policy: LockoutPolicySchema.optional(),
     authenticator_policy: AuthenticatorPolicySchema.optional(),
