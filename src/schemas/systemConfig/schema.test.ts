@@ -181,6 +181,18 @@ describe('SystemConfigSchema', () => {
     ).toBe(true);
   });
 
+  it('leaves phishing-resistant-only mode off so existing deployments are unaffected', () => {
+    expect(SystemConfigSchema.parse(baseConfig).phishing_resistant_only).toBe(false);
+    expect(
+      SystemConfigSchema.parse({ ...baseConfig, phishing_resistant_only: true })
+        .phishing_resistant_only,
+    ).toBe(true);
+    expect(SystemConfigPatchSchema.safeParse({ phishing_resistant_only: true }).success).toBe(true);
+    expect(SystemConfigPatchSchema.safeParse({ phishing_resistant_only: 'yes' }).success).toBe(
+      false,
+    );
+  });
+
   it('applies the default lockout policy', () => {
     const parsed = SystemConfigSchema.parse(baseConfig);
 
