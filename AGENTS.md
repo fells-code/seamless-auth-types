@@ -107,8 +107,8 @@ src/
 | Add changeset | `npm run changeset`       |
 | Pack preview  | `npm run check-npm-build` |
 
-- Node version is pinned by `.nvmrc` (Node 24); CI reads it via
-  `node-version-file`. Run `nvm use` locally to match.
+- Supported Node is `>=22`. CI tests 22, 24, and the latest release;
+  `.nvmrc` pins Node 24 for development and releases. Run `nvm use` locally.
 - commitlint enforces Conventional Commits; husky runs lint-staged on commit.
 - Releases go through Changesets. See `RELEASES.md` for the flow and for how to
   pick the bump.

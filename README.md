@@ -23,7 +23,7 @@ breaking by default. See [Versioning and stability](#versioning-and-stability).
 
 |                      |                           |
 | -------------------- | ------------------------- |
-| Node                 | 24 (`>=24 <25`)           |
+| Node                 | 22 or newer (`>=22`)      |
 | TypeScript           | 5.x                       |
 | Runtime dependencies | `zod@^4` and nothing else |
 
@@ -191,7 +191,7 @@ acknowledgement window, and the coordinated disclosure process.
 ## Development
 
 ```bash
-nvm use          # Node 24, pinned by .nvmrc
+nvm use          # Node 24 for development, pinned by .nvmrc
 npm ci
 
 npm run build      # compile to dist/
