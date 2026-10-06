@@ -416,10 +416,28 @@ export const OAuthProviderIdParamSchema = z.object({
 
 export type OAuthProviderIdParam = z.infer<typeof OAuthProviderIdParamSchema>;
 
+type WithoutDefaults<Shape extends z.ZodRawShape> = {
+  [Key in keyof Shape]: Shape[Key] extends z.ZodDefault<infer Inner> ? Inner : Shape[Key];
+};
+
+function withoutDefaults<Shape extends z.ZodRawShape>(shape: Shape): WithoutDefaults<Shape> {
+  return Object.fromEntries(
+    Object.entries(shape).map(([key, field]) => [
+      key,
+      field instanceof z.ZodDefault ? field.unwrap() : field,
+    ]),
+  ) as WithoutDefaults<Shape>;
+}
+
 // The id is immutable and taken from the path, so it is omitted here. Every other
 // field is optional so callers can patch a single attribute without resending the
 // whole provider; the merged result is re-validated against the full schema.
-export const OAuthProviderUpdateSchema = OAuthProviderConfigSchema.omit({ id: true })
+//
+// Defaults are stripped first: `.partial()` keeps them, so a patch of one field would
+// parse to that field plus every default, and merging that over the stored provider
+// silently reset settings such as `accountLinking` and `allowSignup`.
+export const OAuthProviderUpdateSchema = z
+  .object(withoutDefaults(OAuthProviderConfigSchema.omit({ id: true }).shape))
   .partial()
   .strict();
 
