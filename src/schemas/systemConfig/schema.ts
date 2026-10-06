@@ -290,6 +290,14 @@ export const SystemConfigSchema = z.object({
    * providers have their own `promptPasskeyEnrollment`.
    */
   prompt_passkey_enrollment: z.boolean().default(false),
+  /**
+   * Phishing-resistant authentication only. Sign-in accepts a passkey and nothing
+   * else: email and phone codes, magic links, TOTP and OAuth are refused as ways to
+   * start a session, whatever `login_methods` and `passkey_login_fallback_enabled`
+   * say. A code is still accepted once, to verify the address of a new account before
+   * its first passkey is enrolled.
+   */
+  phishing_resistant_only: z.boolean().default(false),
   oauth_providers: z.array(OAuthProviderConfigSchema).default([]),
   lockout_policy: LockoutPolicySchema.default(DefaultLockoutPolicy),
   // Derived from the field defaults rather than restated, so the two cannot drift.
@@ -365,6 +373,7 @@ export const SystemConfigPatchSchema = z
     passkey_login_fallback_enabled:
       SystemConfigSchema.shape.passkey_login_fallback_enabled.optional(),
     prompt_passkey_enrollment: z.boolean().optional(),
+    phishing_resistant_only: z.boolean().optional(),
     oauth_providers: z.array(OAuthProviderConfigSchema).optional(),
     lockout_policy: LockoutPolicySchema.optional(),
     authenticator_policy: AuthenticatorPolicySchema.optional(),
