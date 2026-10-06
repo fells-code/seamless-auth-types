@@ -173,6 +173,14 @@ describe('magic_link_redirect_uris', () => {
 });
 
 describe('SystemConfigSchema', () => {
+  it('leaves passkey enrollment prompting off unless a tenant turns it on', () => {
+    expect(SystemConfigSchema.parse(baseConfig).prompt_passkey_enrollment).toBe(false);
+    expect(
+      SystemConfigSchema.parse({ ...baseConfig, prompt_passkey_enrollment: true })
+        .prompt_passkey_enrollment,
+    ).toBe(true);
+  });
+
   it('applies the default lockout policy', () => {
     const parsed = SystemConfigSchema.parse(baseConfig);
 

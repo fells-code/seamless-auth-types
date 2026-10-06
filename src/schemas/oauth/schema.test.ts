@@ -78,3 +78,18 @@ describe('OAuth cutover fields', () => {
     expect(OAuthLoginErrorResponseSchema.parse({ error: 'Refused', code }).code).toBe(code);
   });
 });
+
+describe('nextStep on the other sign-ins', () => {
+  it('is accepted on an email or phone code sign-in and a magic link sign-in', async () => {
+    const { MagicLinkPollSuccessSchema, OTPVerifyTokenSuccessSchema } =
+      await import('../auth/auth.schema.js');
+
+    expect(
+      OTPVerifyTokenSuccessSchema.parse({ message: 'Success', nextStep: 'enroll_passkey' })
+        .nextStep,
+    ).toBe('enroll_passkey');
+    expect(
+      MagicLinkPollSuccessSchema.parse({ message: 'Success', nextStep: 'enroll_passkey' }).nextStep,
+    ).toBe('enroll_passkey');
+  });
+});

@@ -81,6 +81,12 @@ export const AuthDeliverySchema = z.discriminatedUnion('kind', [
     token: z.string().optional(),
     magicLinkUrl: z.string(),
   }),
+  z.object({
+    kind: z.literal('enrollment_invite_email'),
+    to: z.string(),
+    // The sign-in page. It carries no credential, so it signs nobody in on its own.
+    signInUrl: z.string(),
+  }),
 ]);
 
 export type AuthDeliveryInstruction = z.infer<typeof AuthDeliverySchema>;

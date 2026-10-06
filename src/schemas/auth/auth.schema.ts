@@ -102,8 +102,19 @@ export const VerifyOTPRequestSchema = z.object({
 
 export type VerifyOTPRequest = z.infer<typeof VerifyOTPRequestSchema>;
 
+/**
+ * What a client should do with a session before sending the user into the app.
+ * `enroll_passkey`: the user has no passkey and the tenant (or the OAuth provider)
+ * asks for one, so send them to passkey enrollment with the session just issued.
+ */
+export const NextStepSchema = z.enum(['enroll_passkey']);
+
+export type NextStep = z.infer<typeof NextStepSchema>;
+
 export const OTPVerifyTokenSuccessSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
+}).extend({
+  nextStep: NextStepSchema.optional(),
 });
 
 export type OTPVerifyTokenSuccess = z.infer<typeof OTPVerifyTokenSuccessSchema>;
@@ -117,6 +128,8 @@ export type MagicLinkVerifyParams = z.infer<typeof MagicLinkVerifyParamsSchema>;
 export const MagicLinkPollSuccessSchema = RefreshSuccessResponseSchema.omit({
   sessionId: true,
   organizationId: true,
+}).extend({
+  nextStep: NextStepSchema.optional(),
 });
 
 export type MagicLinkPollSuccess = z.infer<typeof MagicLinkPollSuccessSchema>;
