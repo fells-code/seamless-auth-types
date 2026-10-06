@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@seamless-auth/types?logo=npm&color=cb3837)](https://www.npmjs.com/package/@seamless-auth/types)
 [![CI](https://github.com/fells-code/seamless-auth-types/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fells-code/seamless-auth-types/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/node/v/@seamless-auth/types?logo=node.js&logoColor=white)](.nvmrc)
-[![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Shared TypeScript types and Zod schemas for the SeamlessAuth ecosystem.
 
@@ -222,7 +222,7 @@ existing schema as breaking until you can argue otherwise.
 
 ## License
 
-[AGPL-3.0-only](LICENSE) © Fells Code, LLC
+[Apache-2.0](LICENSE) © Fells Code, LLC
 
 ## Links
 

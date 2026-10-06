@@ -3,7 +3,7 @@
   "version": "0.25.0",
   "description": "Shared TypeScript types and Zod schemas for SeamlessAuth.",
   "author": "Fells Code, LLC",
-  "license": "AGPL-3.0-only",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
