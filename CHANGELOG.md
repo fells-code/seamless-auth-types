@@ -1,5 +1,22 @@
 # @seamless-auth/types
 
+## 0.25.0
+
+### Minor Changes
+
+- 76b668d: Add the schemas for cutting an organization over from a legacy OAuth identity provider.
+  
+  - `OAuthProviderConfigSchema` gains `promptPasskeyEnrollment` (default `false`). With it set, `OAuthLoginSuccessResponseSchema` carries `nextStep: 'enroll_passkey'` after a sign-in by a user with no passkey.
+  - `OrganizationSchema` gains optional `retiredOAuthProviders`, and `OrganizationOAuthProviderParamSchema` describes the admin retirement path.
+  - `OAUTH_ERROR_CODES` gains `oauth_provider_retired` and `oauth_invalid_id_token` (already returned by the API since 0.16.0).
+  - `AUTH_EVENT_TYPES` gains `admin_oauth_provider_retired` and `admin_oauth_provider_restored`.
+  
+  Code that maps every `OAuthErrorCode` exhaustively (for example `Record<OAuthErrorCode, string>`) needs entries for the two new codes.
+
+### Patch Changes
+
+- 685d53e: Fix `OAuthProviderUpdateSchema` filling in defaults for fields a patch did not send. `.partial()` kept each field's `.default()`, so `{ enabled: false }` parsed to that plus `allowSignup: true`, `accountLinking: 'email'`, `requireEmailVerified: false`, empty `scopes` and `redirectUris`, and the default claim paths. A server merging the parsed patch over the stored provider reset those settings. A patch now parses to exactly the fields that were sent (#83).
+
 ## 0.24.0
 
 ### Minor Changes
