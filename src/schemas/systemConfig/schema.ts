@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OAuthProviderIdSchema } from '../common/schema.js';
 import { UserImportSourceSchema } from '../userImport/schema.js';
 import { RoleNameSchema } from '../role/schema.js';
 
@@ -44,10 +45,6 @@ export const RedirectTargetSchema = z.url().refine(
 
 export type RedirectTarget = z.infer<typeof RedirectTargetSchema>;
 
-export const OAuthProviderIdSchema = z.string().regex(/^[a-z0-9-]{2,40}$/);
-
-export type OAuthProviderId = z.infer<typeof OAuthProviderIdSchema>;
-
 export const OAuthProviderConfigSchema = z.object({
   id: OAuthProviderIdSchema,
   name: z.string().trim().min(1).max(80),
@@ -85,6 +82,12 @@ export const OAuthProviderConfigSchema = z.object({
    */
   externalIdSource: UserImportSourceSchema.optional(),
   externalIdJsonPath: z.string().trim().min(1).optional(),
+  /**
+   * After a sign-in through this provider by a user with no passkey, the callback
+   * response carries `nextStep: 'enroll_passkey'`. Meant for a legacy identity provider
+   * that users are being moved off.
+   */
+  promptPasskeyEnrollment: z.boolean().default(false),
 });
 
 export type OAuthProviderConfig = z.infer<typeof OAuthProviderConfigSchema>;

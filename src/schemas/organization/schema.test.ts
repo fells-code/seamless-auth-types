@@ -3,6 +3,7 @@ import {
   AddOrganizationMemberRequestSchema,
   CreateOrganizationRequestSchema,
   OrganizationMembershipSchema,
+  OrganizationOAuthProviderParamSchema,
   OrganizationSchema,
 } from './schema.js';
 
@@ -54,6 +55,32 @@ describe('OrganizationSchema', () => {
 
   it('rejects a negative member count', () => {
     expect(() => OrganizationSchema.parse({ ...baseOrganization, memberCount: -1 })).toThrow();
+  });
+});
+
+describe('OAuth provider retirement', () => {
+  it('carries the providers the organization has retired', () => {
+    const parsed = OrganizationSchema.parse({
+      ...baseOrganization,
+      retiredOAuthProviders: ['legacy-idp'],
+    });
+
+    expect(parsed.retiredOAuthProviders).toEqual(['legacy-idp']);
+  });
+
+  it('accepts an organization from a server that predates retirement', () => {
+    expect(OrganizationSchema.parse(baseOrganization).retiredOAuthProviders).toBeUndefined();
+  });
+
+  it('validates the provider id in the retirement path', () => {
+    const organizationId = crypto.randomUUID();
+
+    expect(() =>
+      OrganizationOAuthProviderParamSchema.parse({ organizationId, providerId: 'legacy-idp' }),
+    ).not.toThrow();
+    expect(() =>
+      OrganizationOAuthProviderParamSchema.parse({ organizationId, providerId: 'Legacy IdP' }),
+    ).toThrow();
   });
 });
 

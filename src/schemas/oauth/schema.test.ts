@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { OAuthLoginSuccessResponseSchema, StartOAuthLoginRequestSchema } from './schema.js';
+import {
+  OAuthLoginErrorResponseSchema,
+  OAuthLoginSuccessResponseSchema,
+  StartOAuthLoginRequestSchema,
+} from './schema.js';
 
 describe('StartOAuthLoginRequestSchema', () => {
   it('accepts a returnTo', () => {
@@ -51,5 +55,26 @@ describe('OAuthLoginSuccessResponseSchema', () => {
     expect(() =>
       OAuthLoginSuccessResponseSchema.parse({ ...baseResponse, returnTo: 'javascript:alert(1)' }),
     ).toThrow();
+  });
+});
+
+describe('OAuth cutover fields', () => {
+  it('carries nextStep on a sign-in that should continue into passkey enrollment', () => {
+    const parsed = OAuthLoginSuccessResponseSchema.parse({
+      message: 'Success',
+      nextStep: 'enroll_passkey',
+    });
+
+    expect(parsed.nextStep).toBe('enroll_passkey');
+  });
+
+  it('refuses a nextStep it does not know', () => {
+    expect(() =>
+      OAuthLoginSuccessResponseSchema.parse({ message: 'Success', nextStep: 'enroll_totp' }),
+    ).toThrow();
+  });
+
+  it.each(['oauth_provider_retired', 'oauth_invalid_id_token'])('accepts the %s code', (code) => {
+    expect(OAuthLoginErrorResponseSchema.parse({ error: 'Refused', code }).code).toBe(code);
   });
 });

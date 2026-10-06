@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { RefreshSuccessResponseSchema } from '../auth/auth.schema.js';
-import { OAuthProviderIdSchema, RedirectTargetSchema } from '../systemConfig/schema.js';
+import { OAuthProviderIdSchema } from '../common/schema.js';
+import { RedirectTargetSchema } from '../systemConfig/schema.js';
 
 export const OAuthProviderParamSchema = z.object({
   providerId: OAuthProviderIdSchema,
@@ -58,6 +59,13 @@ export const OAuthLoginSuccessResponseSchema = RefreshSuccessResponseSchema.omit
    * as an error.
    */
   returnTo: RedirectTargetSchema.optional(),
+  /**
+   * Present when the provider has `promptPasskeyEnrollment` set and the user has no
+   * passkey. The session in this response is a full access session, so the client sends
+   * the user into passkey enrollment before the app. Absent means there is nothing
+   * further to do.
+   */
+  nextStep: z.enum(['enroll_passkey']).optional(),
 });
 
 export type OAuthLoginSuccessResponse = z.infer<typeof OAuthLoginSuccessResponseSchema>;
@@ -66,6 +74,9 @@ export const OAUTH_ERROR_CODES = [
   'oauth_missing_email',
   'oauth_email_not_verified',
   'oauth_missing_subject',
+  'oauth_invalid_id_token',
+  // A member of an organization that has retired this provider. Answered with 403.
+  'oauth_provider_retired',
 ] as const;
 
 export const OAuthErrorCodeSchema = z.enum(OAUTH_ERROR_CODES);

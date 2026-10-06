@@ -3,6 +3,8 @@ import { IsoDate } from '../../shared.js';
 
 export const AUTH_EVENT_TYPES = [
   'admin_device_replacement_recovery',
+  'admin_oauth_provider_restored',
+  'admin_oauth_provider_retired',
   'admin_user_import_completed',
   'admin_user_imported',
   'admin_session_revoked',
