@@ -7,6 +7,53 @@ export const MetricsIntervalSchema = z.enum(['hour', 'day']);
 
 export type MetricsInterval = z.infer<typeof MetricsIntervalSchema>;
 
+type RangeIssue = { path: ['from'] | ['to']; message: string };
+
+// Shared by every metrics query that takes a range, so they agree on what a valid window is.
+function timeRangeIssues(data: {
+  from?: string | undefined;
+  to?: string | undefined;
+}): RangeIssue[] {
+  const fromDate = data.from ? new Date(data.from) : undefined;
+  const toDate = data.to ? new Date(data.to) : undefined;
+
+  const fromValid = fromDate !== undefined && !Number.isNaN(fromDate.getTime());
+  const toValid = toDate !== undefined && !Number.isNaN(toDate.getTime());
+  const issues: RangeIssue[] = [];
+
+  if (data.from !== undefined && !fromValid) {
+    issues.push({ path: ['from'], message: 'Invalid from date' });
+  }
+
+  if (data.to !== undefined && !toValid) {
+    issues.push({ path: ['to'], message: 'Invalid to date' });
+  }
+
+  if (!fromValid || !toValid || !fromDate || !toDate) {
+    return issues;
+  }
+
+  if (fromDate.getTime() > toDate.getTime()) {
+    return [{ path: ['to'], message: 'from must be on or before to' }];
+  }
+
+  // Unbounded windows let a single request scan the whole event table.
+  if (toDate.getTime() - fromDate.getTime() > MAX_METRICS_WINDOW_MS) {
+    return [{ path: ['to'], message: 'time range exceeds the maximum window' }];
+  }
+
+  return issues;
+}
+
+function refineTimeRange<T extends { from?: string | undefined; to?: string | undefined }>(
+  data: T,
+  ctx: z.RefinementCtx<T>,
+) {
+  for (const issue of timeRangeIssues(data)) {
+    ctx.addIssue({ code: 'custom', ...issue });
+  }
+}
+
 export const MetricsQuerySchema = z
   .object({
     userId: z.string().optional(),
@@ -14,39 +61,7 @@ export const MetricsQuerySchema = z
     to: z.string().optional(),
     interval: MetricsIntervalSchema.optional().default('hour'),
   })
-  .superRefine((data, ctx) => {
-    const fromDate = data.from ? new Date(data.from) : undefined;
-    const toDate = data.to ? new Date(data.to) : undefined;
-
-    const fromValid = fromDate !== undefined && !Number.isNaN(fromDate.getTime());
-    const toValid = toDate !== undefined && !Number.isNaN(toDate.getTime());
-
-    if (data.from !== undefined && !fromValid) {
-      ctx.addIssue({ code: 'custom', path: ['from'], message: 'Invalid from date' });
-    }
-
-    if (data.to !== undefined && !toValid) {
-      ctx.addIssue({ code: 'custom', path: ['to'], message: 'Invalid to date' });
-    }
-
-    if (!fromValid || !toValid || !fromDate || !toDate) {
-      return;
-    }
-
-    if (fromDate.getTime() > toDate.getTime()) {
-      ctx.addIssue({ code: 'custom', path: ['to'], message: 'from must be on or before to' });
-      return;
-    }
-
-    // Unbounded windows let a single request scan the whole event table.
-    if (toDate.getTime() - fromDate.getTime() > MAX_METRICS_WINDOW_MS) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['to'],
-        message: 'time range exceeds the maximum window',
-      });
-    }
-  });
+  .superRefine((data, ctx) => refineTimeRange(data, ctx));
 
 export type MetricsQuery = z.infer<typeof MetricsQuerySchema>;
 
@@ -93,9 +108,42 @@ export const PartialAuthEventSchema = AuthEventSchema.partial();
 
 export type PartialAuthEvent = z.infer<typeof PartialAuthEventSchema>;
 
+/** The window a ranged response covers, as resolved by the server. */
+export const MetricsWindowSchema = z.object({ from: z.string(), to: z.string() });
+
+export type MetricsWindow = z.infer<typeof MetricsWindowSchema>;
+
+/** `from`/`to` default to the last 24 hours, as the endpoints did before they took a range. */
+export const DashboardMetricsQuerySchema = z
+  .object({
+    from: z.string().optional(),
+    to: z.string().optional(),
+  })
+  .superRefine((data, ctx) => refineTimeRange(data, ctx));
+
+export type DashboardMetricsQuery = z.infer<typeof DashboardMetricsQuerySchema>;
+
+export const SecurityAnomaliesQuerySchema = z
+  .object({
+    from: z.string().optional(),
+    to: z.string().optional(),
+    limit: z.coerce.number().int().min(1).max(200).optional().default(200),
+    offset: z.coerce.number().int().min(0).optional().default(0),
+  })
+  .superRefine((data, ctx) => refineTimeRange(data, ctx));
+
+export type SecurityAnomaliesQuery = z.infer<typeof SecurityAnomaliesQuerySchema>;
+
 export const SecurityAnomaliesResponseSchema = z.object({
   suspiciousEvents: z.array(PartialAuthEventSchema),
+  /**
+   * Every matching event in the window. Servers before the range was added reported
+   * the number returned, at most 200, here instead.
+   */
   total: z.number().int().nonnegative(),
+  window: MetricsWindowSchema.optional(),
+  limit: z.number().int().optional(),
+  offset: z.number().int().optional(),
 });
 
 export type SecurityAnomaliesResponse = z.infer<typeof SecurityAnomaliesResponseSchema>;
@@ -110,6 +158,18 @@ export const DashboardMetricsResponseSchema = z.object({
   otpUsage24h: z.number(),
   passkeyUsage24h: z.number(),
   databaseSize: z.number(),
+  /**
+   * The same figures as the `*24h` fields, over the requested window instead of the
+   * last 24 hours. The `*24h` fields keep their meaning whatever window is asked for.
+   * Optional because servers before the range was added do not send them.
+   */
+  window: MetricsWindowSchema.optional(),
+  newUsers: z.number().optional(),
+  loginSuccess: z.number().optional(),
+  loginFailed: z.number().optional(),
+  successRate: z.number().optional(),
+  otpUsage: z.number().optional(),
+  passkeyUsage: z.number().optional(),
 });
 
 export type DashboardMetricsResponse = z.infer<typeof DashboardMetricsResponseSchema>;
