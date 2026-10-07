@@ -1,5 +1,15 @@
 # @seamless-auth/types
 
+## 0.27.0
+
+### Minor Changes
+
+- d34c2ef: Add `phishing_resistant_only` to `SystemConfigSchema` (default `false`) and `SystemConfigPatchSchema`. When it is on, the API starts a session only from a passkey, and refuses email and phone codes, magic links, TOTP and OAuth whatever `login_methods` says. A code is still accepted once, to verify a new account's address before its first passkey is enrolled.
+
+### Patch Changes
+
+- 46a83af: Support Node 22 and newer. The `engines` field now requires `>=22` instead of `>=24 <25`, and CI runs on Node 22, 24, and the latest release (fells-code/seamless-auth-api#339).
+
 ## 0.26.0
 
 ### Minor Changes
