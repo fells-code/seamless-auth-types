@@ -5,7 +5,7 @@
 //
 // Run after `npm run build`. Needs network access to install zod.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,11 +25,11 @@ const run = (cmd, args, cwd) =>
 const work = mkdtempSync(join(tmpdir(), 'seamless-auth-types-zod-floor-'));
 let failed = false;
 try {
-  const tarball = run(
-    'npm',
-    ['pack', '--ignore-scripts', '--silent', '--pack-destination', work],
-    root,
-  ).trim();
+  // Find the tarball on disk rather than parsing stdout: npm 10 still runs the
+  // prepare script during pack despite --ignore-scripts, and its output lands there.
+  run('npm', ['pack', '--ignore-scripts', '--silent', '--pack-destination', work], root);
+  const tarball = readdirSync(work).find((name) => name.endsWith('.tgz'));
+  if (!tarball) throw new Error(`npm pack wrote no tarball to ${work}`);
 
   const consumer = join(work, 'consumer');
   mkdirSync(consumer);
