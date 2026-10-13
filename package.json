@@ -60,6 +60,7 @@
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:zod-floor": "node scripts/check-zod-floor.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release:stable": "npm run build && changeset publish",
@@ -75,7 +76,7 @@
     ]
   },
   "dependencies": {
-    "zod": "^4.3.6"
+    "zod": "^4.5.0"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.2",

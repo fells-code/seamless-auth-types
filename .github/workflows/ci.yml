@@ -67,6 +67,11 @@ jobs:
       - name: Verify package contents
         run: npm run check-npm-build
 
+      # A consumer may resolve the lowest zod our range allows, so the built
+      # declarations have to type-check against it (#95).
+      - name: Type-check consumer against zod floor
+        run: npm run test:zod-floor
+
   # The ruleset on main requires a check with this exact name, which a matrix
   # job no longer reports, so this job reports it once every leg is done.
   ci-result:
