@@ -24,7 +24,7 @@ in the API server, SDKs, or hosted services belong in their own repositories.
 
 If you believe you’ve found a security issue, **please do NOT open a public GitHub issue**. Instead, report privately via email:
 
-**security@seamlessauth.com**  
+**security@fellscode.com**  
 Subject: `Security Issue: seamless-auth-types`
 
 When possible, include the following information in your report:

@@ -202,7 +202,7 @@ history.
 ## Security
 
 Do not open a public issue for a vulnerability. Report it privately to
-**security@seamlessauth.com**. See [SECURITY.md](SECURITY.md) for what to include, our
+**security@fellscode.com**. See [SECURITY.md](SECURITY.md) for what to include, our
 acknowledgement window, and the coordinated disclosure process.
 
 ## Development
