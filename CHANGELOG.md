@@ -1,5 +1,18 @@
 # @seamless-auth/types
 
+## 0.29.0
+
+### Minor Changes
+
+- c386361: Add `binding` to the OAuth start response and the callback request. The auth server returns a
+  random `binding` from `/oauth/:providerId/start` and checks it on `/oauth/:providerId/callback`,
+  so a `state` can only be finished by the client that started the sign-in. Both fields are
+  optional in the schemas so a client can still parse a response from an older auth server.
+
+### Patch Changes
+
+- 14077a9: Raise the `zod` dependency floor from `^4.3.6` to `^4.5.0`. The published declarations use the two-argument `ZodPreprocess` type, which zod 4.3.x does not export and zod 4.4.x declares with a single type parameter, so a consumer resolving zod below 4.5.0 with `skipLibCheck: false` got TS2724 or TS2707 from this package's `.d.ts` files. Consumers pinned to zod 4.4.x or older should upgrade to zod 4.5.0 or later.
+
 ## 0.28.0
 
 ### Minor Changes
