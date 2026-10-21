@@ -241,6 +241,10 @@ existing schema as breaking until you can argue otherwise.
 
 [Apache-2.0](LICENSE) © Fells Code, LLC
 
+Project governance, including the
+[Seamless Auth License Pledge](https://github.com/fells-code/.github/blob/main/GOVERNANCE.md#the-seamless-auth-license-pledge),
+is in the fells-code [GOVERNANCE.md](https://github.com/fells-code/.github/blob/main/GOVERNANCE.md).
+
 ## Links
 
 - [npm package](https://www.npmjs.com/package/@seamless-auth/types)
