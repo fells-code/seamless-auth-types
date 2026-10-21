@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
+  FinishOAuthLoginRequestSchema,
   OAuthLoginErrorResponseSchema,
   OAuthLoginSuccessResponseSchema,
   StartOAuthLoginRequestSchema,
+  StartOAuthLoginResponseSchema,
 } from './schema.js';
 
 describe('StartOAuthLoginRequestSchema', () => {
@@ -91,5 +93,35 @@ describe('nextStep on the other sign-ins', () => {
     expect(
       MagicLinkPollSuccessSchema.parse({ message: 'Success', nextStep: 'enroll_passkey' }).nextStep,
     ).toBe('enroll_passkey');
+  });
+});
+
+describe('StartOAuthLoginResponseSchema', () => {
+  const base = {
+    provider: { id: 'google', name: 'Google', scopes: ['openid'] },
+    state: 'payload.signature',
+    authorizationUrl: 'https://accounts.example.com/authorize',
+  };
+
+  it('carries the binding', () => {
+    expect(StartOAuthLoginResponseSchema.parse({ ...base, binding: 'b1' }).binding).toBe('b1');
+  });
+
+  it('parses a response from a server that sends no binding', () => {
+    expect(StartOAuthLoginResponseSchema.parse(base).binding).toBeUndefined();
+  });
+});
+
+describe('FinishOAuthLoginRequestSchema', () => {
+  it('accepts a binding', () => {
+    expect(
+      FinishOAuthLoginRequestSchema.parse({ code: 'c', state: 's', binding: 'b1' }).binding,
+    ).toBe('b1');
+  });
+
+  it('refuses an empty binding', () => {
+    expect(() =>
+      FinishOAuthLoginRequestSchema.parse({ code: 'c', state: 's', binding: ' ' }),
+    ).toThrow();
   });
 });
