@@ -35,6 +35,12 @@ export const StartOAuthLoginResponseSchema = z.object({
   provider: PublicOAuthProviderSchema,
   state: z.string(),
   authorizationUrl: z.url(),
+  /**
+   * Binds `state` to the client that started the sign-in. The client keeps it and sends
+   * it back with the callback; it never goes to the provider. Optional only so a client
+   * can parse a response from an auth server that predates it.
+   */
+  binding: z.string().optional(),
 });
 
 export type StartOAuthLoginResponse = z.infer<typeof StartOAuthLoginResponseSchema>;
@@ -42,6 +48,8 @@ export type StartOAuthLoginResponse = z.infer<typeof StartOAuthLoginResponseSche
 export const FinishOAuthLoginRequestSchema = z.object({
   code: z.string().trim().min(1),
   state: z.string().trim().min(1),
+  /** The `binding` the start response returned to this client. */
+  binding: z.string().trim().min(1).optional(),
 });
 
 export type FinishOAuthLoginRequest = z.infer<typeof FinishOAuthLoginRequestSchema>;
