@@ -35,6 +35,57 @@ const baseConfig = {
 };
 
 describe('OAuthProviderConfigSchema', () => {
+  it.each(['GOOGLE_CLIENT_SECRET', 'GOOGLE_OAUTH_CLIENT_SECRET', 'MICROSOFT_CLIENT_SECRET'])(
+    'accepts the client secret env %s',
+    (clientSecretEnv) => {
+      expect(
+        OAuthProviderConfigSchema.safeParse({ ...baseProvider, clientSecretEnv }).success,
+      ).toBe(true);
+    },
+  );
+
+  it.each([
+    'SEAMLESS_SERVICE_TOKEN',
+    'DATABASE_URL',
+    'SEAMLESS_JWKS_KEY_main_PRIVATE',
+    '_CLIENT_SECRET',
+    'google_client_secret',
+  ])('refuses the client secret env %s', (clientSecretEnv) => {
+    expect(OAuthProviderConfigSchema.safeParse({ ...baseProvider, clientSecretEnv }).success).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ['authorizationUrl', 'javascript:alert(1)//'],
+    ['authorizationUrl', 'data:text/html,hi'],
+    ['tokenUrl', 'file:///etc/passwd'],
+    ['userInfoUrl', 'ftp://idp.example.com/userinfo'],
+    ['jwksUri', 'gopher://idp.example.com/jwks'],
+  ])('refuses %s with a scheme other than http(s): %s', (field, value) => {
+    expect(OAuthProviderConfigSchema.safeParse({ ...baseProvider, [field]: value }).success).toBe(
+      false,
+    );
+  });
+
+  it('accepts http provider URLs, which the server allows outside production', () => {
+    expect(
+      OAuthProviderConfigSchema.safeParse({
+        ...baseProvider,
+        tokenUrl: 'http://localhost:9000/token',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('applies the same rules to a provider update', () => {
+    expect(OAuthProviderUpdateSchema.safeParse({ clientSecretEnv: 'DB_PASSWORD' }).success).toBe(
+      false,
+    );
+    expect(
+      OAuthProviderUpdateSchema.safeParse({ authorizationUrl: 'javascript:alert(1)//' }).success,
+    ).toBe(false);
+  });
+
   it('applies defaults for the optional discovery fields', () => {
     const parsed = OAuthProviderConfigSchema.parse(baseProvider);
 

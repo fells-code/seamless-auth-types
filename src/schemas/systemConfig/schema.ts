@@ -45,6 +45,24 @@ export const RedirectTargetSchema = z.url().refine(
 
 export type RedirectTarget = z.infer<typeof RedirectTargetSchema>;
 
+// Provider endpoints the server fetches, and the authorization URL the browser is sent
+// to. `z.url()` alone accepts any scheme, including `javascript:`.
+const ProviderUrlSchema = z.url({ protocol: /^https?$/ });
+
+/**
+ * The auth server reads a provider's secret from this env var, so the name is held to
+ * the shape of an OAuth client secret: configuration cannot point the token exchange at
+ * any other secret the server holds (GHSA-qx82-28gf-w744).
+ */
+export const OAuthClientSecretEnvSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Z][A-Z0-9_]{0,59}_CLIENT_SECRET$/, {
+    message: 'Must be an env var name ending in _CLIENT_SECRET, for example GOOGLE_CLIENT_SECRET',
+  });
+
+export type OAuthClientSecretEnv = z.infer<typeof OAuthClientSecretEnvSchema>;
+
 export const OAuthProviderConfigSchema = z.object({
   id: OAuthProviderIdSchema,
   name: z.string().trim().min(1).max(80),
@@ -52,10 +70,10 @@ export const OAuthProviderConfigSchema = z.object({
   clientId: z.string().trim().min(1),
   // The secret itself never lives in config; this names the environment
   // variable the server reads it from.
-  clientSecretEnv: z.string().trim().min(1),
-  authorizationUrl: z.url(),
-  tokenUrl: z.url(),
-  userInfoUrl: z.url(),
+  clientSecretEnv: OAuthClientSecretEnvSchema,
+  authorizationUrl: ProviderUrlSchema,
+  tokenUrl: ProviderUrlSchema,
+  userInfoUrl: ProviderUrlSchema,
   scopes: z.array(z.string().trim().min(1)).default([]),
   redirectUri: z.url().optional(),
   redirectUris: z.array(z.url()).default([]),
@@ -73,7 +91,7 @@ export const OAuthProviderConfigSchema = z.object({
    * read for the profile claims instead of calling `userInfoUrl`.
    */
   issuer: z.url().optional(),
-  jwksUri: z.url().optional(),
+  jwksUri: ProviderUrlSchema.optional(),
   /**
    * Links a first sign-in to a user imported under this source (see
    * `ImportUsersRequestSchema`) whose external id equals the ID token claim at
