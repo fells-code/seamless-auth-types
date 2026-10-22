@@ -51,6 +51,8 @@ export const RefreshSuccessResponseSchema = z.object({
   phone: z.string().nullable().optional(),
   ttl: z.number().optional(),
   refreshTtl: z.number().optional(),
+  /** A restricted recovery session; see `RecoverySessionResponseSchema`. */
+  recovery: z.boolean().optional(),
 });
 
 export type RefreshSuccessResponse = z.infer<typeof RefreshSuccessResponseSchema>;

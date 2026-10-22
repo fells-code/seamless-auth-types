@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  AccountRecoveryPolicySchema,
   AuthenticatorPolicySchema,
   DefaultLockoutPolicy,
   OAuthProviderConfigSchema,
@@ -547,5 +548,35 @@ describe('SystemConfigSchema authenticator policy default', () => {
     const fromConfig = SystemConfigSchema.parse(baseConfig).authenticator_policy;
 
     expect(fromConfig).toEqual(AuthenticatorPolicySchema.parse({}));
+  });
+});
+
+describe('recovery policies', () => {
+  it('defaults recovery codes on and account recovery off with a 24h delay', () => {
+    const parsed = SystemConfigSchema.parse(baseConfig);
+
+    expect(parsed.recovery_codes).toEqual({ enabled: true, requireAtEnrollment: false });
+    expect(parsed.account_recovery).toEqual({ enabled: false, delay: '24h' });
+  });
+
+  it.each(['1h', '24h', '30d', '3600s'])('accepts an account recovery delay of %s', (delay) => {
+    expect(AccountRecoveryPolicySchema.safeParse({ delay }).success).toBe(true);
+  });
+
+  it.each(['59m', '31d', '0h', '1w'])('refuses an account recovery delay of %s', (delay) => {
+    expect(AccountRecoveryPolicySchema.safeParse({ delay }).success).toBe(false);
+  });
+
+  it('patches the recovery policies', () => {
+    expect(
+      SystemConfigPatchSchema.safeParse({ account_recovery: { enabled: true, delay: '48h' } })
+        .success,
+    ).toBe(true);
+  });
+
+  it('parses a public config from a server that predates recovery', () => {
+    expect(PublicSystemConfigResponseSchema.parse({ loginMethods: ['passkey'] })).toEqual({
+      loginMethods: ['passkey'],
+    });
   });
 });
