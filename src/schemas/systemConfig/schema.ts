@@ -277,6 +277,41 @@ export const DefaultAuthenticatorPolicy = {
 
 const DurationSchema = z.string().regex(/^\d+[smhd]$/);
 
+const DURATION_SECONDS = { s: 1, m: 60, h: 3600, d: 86400 } as const;
+
+function durationSeconds(value: string) {
+  const unit = value.slice(-1) as keyof typeof DURATION_SECONDS;
+  return Number(value.slice(0, -1)) * DURATION_SECONDS[unit];
+}
+
+/**
+ * Single-use recovery codes. On by default: a user only has codes after generating
+ * them, so the switch only matters once someone has. Not a login method, so no
+ * `login_methods` change can take a user's way back in away from them.
+ */
+export const RecoveryCodesPolicySchema = z.object({
+  enabled: z.boolean().default(true),
+  /** Ask for a set of codes as part of first passkey enrollment. */
+  requireAtEnrollment: z.boolean().default(false),
+});
+
+export type RecoveryCodesPolicy = z.infer<typeof RecoveryCodesPolicySchema>;
+
+/**
+ * Self-service recovery through a verified email or phone, completed only after
+ * `delay` and announced on every other channel and session so the owner can cancel.
+ * Off by default: it is a way into an account that does not need its factors.
+ */
+export const AccountRecoveryPolicySchema = z.object({
+  enabled: z.boolean().default(false),
+  delay: DurationSchema.refine(
+    (value) => durationSeconds(value) >= 3600 && durationSeconds(value) <= 30 * 86400,
+    { message: 'delay must be between 1h and 30d' },
+  ).default('24h'),
+});
+
+export type AccountRecoveryPolicy = z.infer<typeof AccountRecoveryPolicySchema>;
+
 export const SystemConfigSchema = z.object({
   app_name: z.string().min(3),
   default_roles: z.array(RoleNameSchema).min(1),
@@ -304,6 +339,10 @@ export const SystemConfigSchema = z.object({
   // DefaultAuthenticatorPolicy stays exported for consumers that need the shape.
   authenticator_policy: AuthenticatorPolicySchema.default(() =>
     AuthenticatorPolicySchema.parse({}),
+  ),
+  recovery_codes: RecoveryCodesPolicySchema.default(() => RecoveryCodesPolicySchema.parse({})),
+  account_recovery: AccountRecoveryPolicySchema.default(() =>
+    AccountRecoveryPolicySchema.parse({}),
   ),
 
   access_token_ttl: z.string().regex(/^\d+[smhd]$/),
@@ -377,6 +416,8 @@ export const SystemConfigPatchSchema = z
     oauth_providers: z.array(OAuthProviderConfigSchema).optional(),
     lockout_policy: LockoutPolicySchema.optional(),
     authenticator_policy: AuthenticatorPolicySchema.optional(),
+    recovery_codes: RecoveryCodesPolicySchema.optional(),
+    account_recovery: AccountRecoveryPolicySchema.optional(),
     access_token_ttl: SystemConfigSchema.shape.access_token_ttl.optional(),
     session_idle_ttl: DurationSchema.optional(),
     refresh_token_ttl: SystemConfigSchema.shape.refresh_token_ttl.optional(),
@@ -511,6 +552,10 @@ export type AvailableRolesResponse = z.infer<typeof AvailableRolesResponseSchema
  */
 export const PublicSystemConfigResponseSchema = z.object({
   loginMethods: z.array(LoginMethodSchema).min(1),
+  // Optional so a client still parses a server from before v0.20. Lets the sign-in
+  // screens offer "use a recovery code" and "can't sign in?" only where they work.
+  recoveryCodes: z.boolean().optional(),
+  accountRecovery: z.boolean().optional(),
 });
 
 export type PublicSystemConfigResponse = z.infer<typeof PublicSystemConfigResponseSchema>;

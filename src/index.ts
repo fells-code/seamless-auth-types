@@ -19,3 +19,5 @@ export * from './schemas/metrics/schema.js';
 export * from './schemas/admin/schema.js';
 export * from './schemas/userImport/schema.js';
 export * from './schemas/enrollment/schema.js';
+export * from './schemas/recovery/schema.js';
+export * from './schemas/policy/schema.js';
