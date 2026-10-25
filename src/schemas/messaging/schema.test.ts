@@ -35,6 +35,57 @@ describe('AuthDeliverySchema', () => {
       AuthDeliverySchema.parse({ kind: 'otp_email', to: 'user@example.com', token: 123456 }),
     ).toThrow();
   });
+
+  it('marks a code sent for account recovery, and still parses one without a purpose', () => {
+    const parsed = AuthDeliverySchema.parse({
+      kind: 'otp_sms',
+      to: '+15555550100',
+      token: '123456',
+      purpose: 'account_recovery',
+    });
+
+    expect(parsed).toMatchObject({ purpose: 'account_recovery' });
+    expect(() =>
+      AuthDeliverySchema.parse({
+        kind: 'otp_email',
+        to: 'user@example.com',
+        token: '1',
+        purpose: 'sign_in',
+      }),
+    ).toThrow();
+  });
+
+  it('parses an account notice with its cancel link', () => {
+    const parsed = AuthDeliverySchema.parse({
+      kind: 'account_notice_email',
+      notice: 'account_recovery_opened',
+      to: 'user@example.com',
+      subject: 'Account recovery requested',
+      text: 'Cancel it: https://app.example.com/recovery/cancel#token',
+      cancelUrl: 'https://app.example.com/recovery/cancel#token',
+    });
+
+    expect(parsed.kind).toBe('account_notice_email');
+    expect(() =>
+      AuthDeliverySchema.parse({
+        kind: 'account_notice_sms',
+        notice: 'recovery_code_used',
+        to: '+15555550100',
+        text: 'A recovery code was used.',
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects an account notice with an unknown name', () => {
+    expect(() =>
+      AuthDeliverySchema.parse({
+        kind: 'account_notice_sms',
+        notice: 'birthday',
+        to: '+15555550100',
+        text: 'hi',
+      }),
+    ).toThrow();
+  });
 });
 
 describe('DeliveryResultSchema', () => {
