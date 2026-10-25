@@ -64,16 +64,36 @@ export type SendMagicLinkEmailInput = z.infer<typeof SendMagicLinkEmailInputSche
  * the message itself when the adopter owns delivery, so this is the contract
  * between the two.
  */
+/**
+ * Why a code was sent, when it is not an ordinary sign-in or verification code. A server
+ * that ignores it still delivers the code; one that reads it can warn the owner.
+ */
+export const DeliveryPurposeSchema = z.enum(['account_recovery']);
+
+export type DeliveryPurpose = z.infer<typeof DeliveryPurposeSchema>;
+
+/** The owner notices the auth API sends about something that happened to an account. */
+export const AccountNoticeNameSchema = z.enum([
+  'account_recovery_opened',
+  'account_recovery_completed',
+  'recovery_code_used',
+  'identity_changed',
+]);
+
+export type AccountNoticeName = z.infer<typeof AccountNoticeNameSchema>;
+
 export const AuthDeliverySchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('otp_email'),
     to: z.string(),
     token: z.string(),
+    purpose: DeliveryPurposeSchema.optional(),
   }),
   z.object({
     kind: z.literal('otp_sms'),
     to: z.string(),
     token: z.union([z.string(), z.number()]),
+    purpose: DeliveryPurposeSchema.optional(),
   }),
   z.object({
     kind: z.literal('magic_link_email'),
@@ -86,6 +106,23 @@ export const AuthDeliverySchema = z.discriminatedUnion('kind', [
     to: z.string(),
     // The sign-in page. It carries no credential, so it signs nobody in on its own.
     signInUrl: z.string(),
+  }),
+  // `subject` and `text` are ready to send as they are; `notice` lets a server use its
+  // own template instead. `cancelUrl` carries a credential, so it must reach only `to`.
+  z.object({
+    kind: z.literal('account_notice_email'),
+    notice: AccountNoticeNameSchema,
+    to: z.string(),
+    subject: z.string(),
+    text: z.string(),
+    cancelUrl: z.string().optional(),
+  }),
+  z.object({
+    kind: z.literal('account_notice_sms'),
+    notice: AccountNoticeNameSchema,
+    to: z.string(),
+    text: z.string(),
+    cancelUrl: z.string().optional(),
   }),
 ]);
 
