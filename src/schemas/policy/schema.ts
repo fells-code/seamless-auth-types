@@ -163,6 +163,8 @@ export const PolicyDryRunResponseSchema = z.object({
   usersLockedOut: z.number().int().nonnegative(),
   /** Break-glass accounts are exempt from policy, so they are counted, never refused. */
   breakGlassAccounts: z.number().int().nonnegative(),
+  /** True when more accounts signed in than the dry run evaluates, so the counts are partial. */
+  capped: z.boolean().optional(),
 });
 
 export type PolicyDryRunResponse = z.infer<typeof PolicyDryRunResponseSchema>;

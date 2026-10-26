@@ -85,5 +85,20 @@ describe('policy requests', () => {
     });
 
     expect(parsed.wouldFail[0].reasons).toEqual(['phishing_resistant_required']);
+    expect(parsed.capped).toBeUndefined();
+  });
+
+  it('says when the run was capped', () => {
+    const parsed = PolicyDryRunResponseSchema.parse({
+      window: { from: '2026-10-15T00:00:00Z', to: '2026-10-22T00:00:00Z' },
+      signInsEvaluated: 0,
+      usersEvaluated: 10000,
+      wouldFail: [],
+      usersLockedOut: 0,
+      breakGlassAccounts: 0,
+      capped: true,
+    });
+
+    expect(parsed.capped).toBe(true);
   });
 });
