@@ -27,6 +27,12 @@ export const MeResponseSchema = z.object({
   credentials: z.array(CredentialResponseSchema),
   organizations: z.array(OrganizationSchema).optional(),
   activeOrganization: OrganizationSchema.nullable().optional(),
+  /**
+   * True for a recovery session, from account recovery or a recovery code: it can only
+   * enroll a new passkey or authenticator app until one is enrolled. A cookie client
+   * cannot read its access token, so this is how it learns that after a reload.
+   */
+  recovery: z.boolean().optional(),
 });
 
 export type MeResponse = z.infer<typeof MeResponseSchema>;

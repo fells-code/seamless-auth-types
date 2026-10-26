@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  AccountRecoveryRequestsResponseSchema,
   AccountRecoveryStartRequestSchema,
   AccountRecoveryStatusSchema,
+  AccountRecoveryVerifyResponseSchema,
   RecoveryCodeRedeemRequestSchema,
   RecoveryCodesGeneratedSchema,
   RecoveryCodesStatusSchema,
+  RecoveryErrorCodeSchema,
   RecoverySessionResponseSchema,
 } from './schema.js';
 
@@ -86,5 +89,49 @@ describe('account recovery', () => {
         completesAt: '2026-10-23T00:00:00Z',
       }).completesAt,
     ).toBe('2026-10-23T00:00:00.000Z');
+  });
+});
+
+describe('account recovery requests', () => {
+  const status = {
+    state: 'pending',
+    requestedAt: '2026-10-25T00:00:00.000Z',
+    completesAt: '2026-10-26T00:00:00.000Z',
+  };
+
+  it('lists open requests with their id and channel', () => {
+    const parsed = AccountRecoveryRequestsResponseSchema.parse({
+      requests: [{ ...status, id: '7a0c6a1e-8f9e-4c5e-9a40-2a0f7f1f6f11', channel: 'email' }],
+    });
+
+    expect(parsed.requests[0]).toMatchObject({ channel: 'email', state: 'pending' });
+    expect(() =>
+      AccountRecoveryRequestsResponseSchema.parse({
+        requests: [{ ...status, id: 'not-a-uuid', channel: 'email' }],
+      }),
+    ).toThrow();
+  });
+
+  it('accepts a verify response with or without the returned notices', () => {
+    expect(AccountRecoveryVerifyResponseSchema.parse(status)).toEqual(status);
+    expect(
+      AccountRecoveryVerifyResponseSchema.parse({
+        ...status,
+        deliveries: [
+          {
+            kind: 'account_notice_sms',
+            notice: 'account_recovery_opened',
+            to: '+15555550100',
+            text: 'Recovery was requested.',
+            cancelUrl: 'https://app.example.com/recovery/cancel#t',
+          },
+        ],
+      }).deliveries,
+    ).toHaveLength(1);
+  });
+
+  it('names the recovery error codes', () => {
+    expect(RecoveryErrorCodeSchema.parse('recovery_notice_failed')).toBe('recovery_notice_failed');
+    expect(() => RecoveryErrorCodeSchema.parse('nope')).toThrow();
   });
 });
