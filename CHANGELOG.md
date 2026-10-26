@@ -1,5 +1,11 @@
 # @seamless-auth/types
 
+## 0.33.0
+
+### Minor Changes
+
+- 2f7b7f8: `PolicyDryRunResponseSchema` gains optional `capped`, true when more accounts signed in than the dry run evaluates, so a console can say the counts are partial instead of guessing from them.
+
 ## 0.32.0
 
 ### Minor Changes
