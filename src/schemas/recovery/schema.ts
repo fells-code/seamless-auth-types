@@ -107,8 +107,55 @@ export const AccountRecoveryStatusSchema = z.object({
 export type AccountRecoveryStatus = z.infer<typeof AccountRecoveryStatusSchema>;
 
 /**
- * `POST /recovery/cancel`. Either the token from the notice sent to the other
- * channels, or no body with an access session for the account.
+ * `POST /recovery/verify`. `deliveries` carries the "recovery opened" notices only for a
+ * credentialed caller that owns delivery and names their kinds in
+ * `x-seamless-auth-delivery-kinds`; each can hold a cancel link for the owner alone.
+ */
+export const AccountRecoveryVerifyResponseSchema = AccountRecoveryStatusSchema.extend({
+  deliveries: z.array(AuthDeliverySchema).optional(),
+});
+
+export type AccountRecoveryVerifyResponse = z.infer<typeof AccountRecoveryVerifyResponseSchema>;
+
+/** One open request, as `GET /recovery/requests` lists it for the signed-in owner. */
+export const AccountRecoveryRequestSchema = AccountRecoveryStatusSchema.extend({
+  id: z.string().uuid(),
+  channel: AccountRecoveryChannelSchema,
+});
+
+export type AccountRecoveryRequest = z.infer<typeof AccountRecoveryRequestSchema>;
+
+export const AccountRecoveryRequestsResponseSchema = z.object({
+  requests: z.array(AccountRecoveryRequestSchema),
+});
+
+export type AccountRecoveryRequestsResponse = z.infer<typeof AccountRecoveryRequestsResponseSchema>;
+
+/** `DELETE /recovery/requests/:id`. */
+export const AccountRecoveryRequestIdParamSchema = z.object({ id: z.string().uuid() });
+
+export type AccountRecoveryRequestIdParam = z.infer<typeof AccountRecoveryRequestIdParamSchema>;
+
+/**
+ * The `error` values the recovery code and account recovery routes answer with, so a
+ * client can tell them apart without matching strings of its own.
+ */
+export const RecoveryErrorCodeSchema = z.enum([
+  'invalid_recovery_code',
+  'recovery_codes_disabled',
+  'cancel_token_required',
+  'recovery_notice_failed',
+  'account_recovery_disabled',
+  'recovery_not_found',
+  'recovery_not_ready',
+  'enrollment_required',
+]);
+
+export type RecoveryErrorCode = z.infer<typeof RecoveryErrorCodeSchema>;
+
+/**
+ * `POST /recovery/cancel` with the token from the "recovery opened" notice. A signed-in
+ * owner cancels without it through `DELETE /recovery/requests/:id`.
  */
 export const AccountRecoveryCancelRequestSchema = z.object({
   cancelToken: z.string().trim().min(1).optional(),

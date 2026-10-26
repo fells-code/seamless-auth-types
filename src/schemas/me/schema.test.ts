@@ -41,3 +41,12 @@ describe('MeResponseSchema', () => {
     ).not.toThrow();
   });
 });
+
+describe('MeResponseSchema recovery flag', () => {
+  it('reports a recovery session, and still parses a response without the flag', () => {
+    const body = { user: baseUser, credentials: [] };
+
+    expect(MeResponseSchema.parse({ ...body, recovery: true }).recovery).toBe(true);
+    expect(MeResponseSchema.parse(body).recovery).toBeUndefined();
+  });
+});
