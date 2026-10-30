@@ -7,3 +7,5 @@ Adds the `oidcEdge` module: the service-token contract between the OpenID Provid
 The 0.34.0 line is published as prereleases on the `next` tag while the v0.21 contracts settle, so expect changes between `0.34.0-next.N` releases.
 
 `SystemConfigSchema` and `SystemConfigPatchSchema` gain the provider keys from ADR D6, D10 and D13: `oidc_provider_enabled` (default `false`), `oidc_issuer` (default `null`), `allow_client_secrets` and `third_party_clients_enabled` (both default `false`). The inferred `SystemConfig` type gains four required fields, so code that builds a full config object by hand needs them.
+
+`AUTH_EVENT_TYPES` gains the provider events: `oidc_<type>` for each `OidcEdgeEventType`, plus `oidc_sign_failed` and `oidc_session_revoked`, which the API writes itself.

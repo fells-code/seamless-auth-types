@@ -331,19 +331,20 @@ export const OidcSessionRevokeRequestSchema = z.object({
 
 export type OidcSessionRevokeRequest = z.infer<typeof OidcSessionRevokeRequestSchema>;
 
+/** Stored as `oidc_<type>` auth events, so the suffixes follow the auth event outcome rules. */
 export const OidcEdgeEventTypeSchema = z.enum([
   'interaction_completed',
   'consent_granted',
   'consent_denied',
   'token_issued',
   'token_refreshed',
-  'refresh_token_reused',
+  'refresh_token_suspicious',
   'token_revoked',
   'client_auth_failed',
   'end_session',
   'device_code_approved',
   'device_code_denied',
-  'server_error',
+  'edge_failed',
 ]);
 
 export type OidcEdgeEventType = z.infer<typeof OidcEdgeEventTypeSchema>;
