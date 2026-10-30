@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  OidcAccountQuerySchema,
   OidcAuthContextSchema,
   OidcClientMetadataSchema,
   OidcEdgeEventSchema,
@@ -194,5 +195,12 @@ describe('OidcEdgeEventSchema', () => {
     expect(() =>
       OidcEdgeEventSchema.parse({ type: 'token_issued', occurredAt: '2026-10-30T12:00:00.000Z' }),
     ).toThrow();
+  });
+});
+
+describe('OidcAccountQuerySchema', () => {
+  it('requires the client and session the lookup serves', () => {
+    expect(() => OidcAccountQuerySchema.parse({ clientId: 'app' })).toThrow();
+    expect(() => OidcAccountQuerySchema.parse({ clientId: 'app', sessionId: 's1' })).not.toThrow();
   });
 });

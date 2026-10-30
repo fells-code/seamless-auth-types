@@ -263,6 +263,23 @@ export const OidcAccountIdParamsSchema = z.object({
 
 export type OidcAccountIdParams = z.infer<typeof OidcAccountIdParamsSchema>;
 
+/**
+ * Lookups name the session and client they serve. The API answers only for a live session
+ * holding a provider grant for that client, the same binding `/oidc/sign` applies.
+ */
+export const OidcAccountQuerySchema = z.object({
+  clientId: OidcIdentifierSchema,
+  sessionId: OidcIdentifierSchema,
+});
+
+export type OidcAccountQuery = z.infer<typeof OidcAccountQuerySchema>;
+
+export const OidcSessionQuerySchema = z.object({
+  clientId: OidcIdentifierSchema,
+});
+
+export type OidcSessionQuery = z.infer<typeof OidcSessionQuerySchema>;
+
 /** Every claim the account has. The edge releases them by scope. */
 export const OidcAccountClaimsSchema = z.object({
   sub: z.string(),
