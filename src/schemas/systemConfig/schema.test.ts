@@ -631,3 +631,43 @@ describe('recovery policies', () => {
     });
   });
 });
+
+describe('SystemConfigSchema OpenID Provider keys', () => {
+  it('is off with no issuer when config predates the keys', () => {
+    const parsed = SystemConfigSchema.parse(baseConfig);
+
+    expect(parsed.oidc_provider_enabled).toBe(false);
+    expect(parsed.oidc_issuer).toBeNull();
+    expect(parsed.allow_client_secrets).toBe(false);
+    expect(parsed.third_party_clients_enabled).toBe(false);
+  });
+
+  it('rejects an issuer that is not a URL', () => {
+    expect(SystemConfigSchema.safeParse({ ...baseConfig, oidc_issuer: 'login' }).success).toBe(
+      false,
+    );
+  });
+
+  it('is patchable, including clearing the issuer', () => {
+    expect(
+      SystemConfigPatchSchema.parse({
+        oidc_provider_enabled: true,
+        oidc_issuer: null,
+        allow_client_secrets: true,
+        third_party_clients_enabled: true,
+      }),
+    ).toEqual({
+      oidc_provider_enabled: true,
+      oidc_issuer: null,
+      allow_client_secrets: true,
+      third_party_clients_enabled: true,
+    });
+  });
+
+  it('does not inject defaults into a patch', () => {
+    const parsed = SystemConfigPatchSchema.parse({ app_name: 'Seamless' });
+
+    expect('oidc_provider_enabled' in parsed).toBe(false);
+    expect('oidc_issuer' in parsed).toBe(false);
+  });
+});

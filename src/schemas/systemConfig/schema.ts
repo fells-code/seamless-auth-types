@@ -417,6 +417,18 @@ export const SystemConfigSchema = z.object({
    * on a host that should not also be a WebAuthn origin.
    */
   magic_link_redirect_uris: z.array(RedirectTargetSchema).default([]),
+
+  /**
+   * Turns on the API's `/oidc/*` routes for the OpenID Provider service. Off by default,
+   * and the API refuses to turn it on until `oidc_issuer` is set and covered by `rpid` and
+   * the provider signing keys are present.
+   */
+  oidc_provider_enabled: z.boolean().default(false),
+  /** The provider service's public URL. Never equal to the API's own `ISSUER`. */
+  oidc_issuer: z.url().nullable().default(null),
+  /** Lets an admin opt individual provider clients in to shared secrets. */
+  allow_client_secrets: z.boolean().default(false),
+  third_party_clients_enabled: z.boolean().default(false),
 });
 
 export type SystemConfig = z.infer<typeof SystemConfigSchema>;
@@ -446,6 +458,10 @@ export const SystemConfigPatchSchema = z
     rpid: SystemConfigSchema.shape.rpid.optional(),
     origins: SystemConfigSchema.shape.origins.optional(),
     magic_link_redirect_uris: z.array(RedirectTargetSchema).optional(),
+    oidc_provider_enabled: z.boolean().optional(),
+    oidc_issuer: z.url().nullable().optional(),
+    allow_client_secrets: z.boolean().optional(),
+    third_party_clients_enabled: z.boolean().optional(),
   })
   .strict();
 

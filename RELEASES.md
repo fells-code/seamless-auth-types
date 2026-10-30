@@ -38,6 +38,15 @@ When changesets are merged to `main`, the workflow opens or updates a release PR
 Review that PR like a normal release artifact. When it is merged, the workflow publishes the npm
 package, creates the Git tag, and creates the GitHub Release.
 
+## Prereleases
+
+The repo is in Changesets pre mode on the `next` tag (`.changeset/pre.json`) while the v0.21
+contracts settle. Release PRs from `main` publish `0.34.0-next.N` to the `next` dist-tag, and
+`latest` stays on the last stable version. Consumers pin the exact prerelease.
+
+To cut the stable release, run `npx changeset pre exit` in a PR. The next release PR then
+publishes `0.34.0` to `latest`.
+
 ## Rollout order
 
 Publish this package before the repos that depend on it. A consumer that adopts a new contract
