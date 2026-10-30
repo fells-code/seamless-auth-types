@@ -185,7 +185,9 @@ export const OidcPublicJwkSchema = z
 
 export type OidcPublicJwk = z.infer<typeof OidcPublicJwkSchema>;
 
+/** `activeKid` is the only key `/oidc/sign` signs with. The others are published for rotation. */
 export const OidcJwksResponseSchema = z.object({
+  activeKid: z.string(),
   keys: z.array(OidcPublicJwkSchema),
 });
 

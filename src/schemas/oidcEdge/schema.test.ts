@@ -94,14 +94,18 @@ describe('OidcJwksResponseSchema', () => {
   const publicKey = { kty: 'RSA', kid: 'k1', alg: 'RS256', use: 'sig', n: 'abc', e: 'AQAB' };
 
   it('keeps public members', () => {
-    expect(OidcJwksResponseSchema.parse({ keys: [publicKey] }).keys[0]).toMatchObject({
+    expect(
+      OidcJwksResponseSchema.parse({ activeKid: 'k1', keys: [publicKey] }).keys[0],
+    ).toMatchObject({
       n: 'abc',
       e: 'AQAB',
     });
   });
 
   it('rejects a key with private members', () => {
-    expect(() => OidcJwksResponseSchema.parse({ keys: [{ ...publicKey, d: 'secret' }] })).toThrow();
+    expect(() =>
+      OidcJwksResponseSchema.parse({ activeKid: 'k1', keys: [{ ...publicKey, d: 'secret' }] }),
+    ).toThrow();
   });
 });
 
