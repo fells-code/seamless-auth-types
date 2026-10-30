@@ -104,9 +104,13 @@ export const OidcPayloadUpsertResponseSchema = z.object({
 
 export type OidcPayloadUpsertResponse = z.infer<typeof OidcPayloadUpsertResponseSchema>;
 
-/** Expired and destroyed records answer 404, never a record. */
+/**
+ * Expired and destroyed records answer 404, never a record. `sessionId` is what the record
+ * was stored with, so a refresh can recover the session behind its grant.
+ */
 export const OidcPayloadRecordSchema = z.object({
   payload: z.record(z.string(), z.unknown()),
+  sessionId: z.string().nullable(),
   expiresAt: z.iso.datetime(),
   consumedAt: z.iso.datetime().nullable(),
 });

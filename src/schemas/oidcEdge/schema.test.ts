@@ -45,6 +45,7 @@ describe('OidcPayloadRecordSchema', () => {
     expect(() =>
       OidcPayloadRecordSchema.parse({
         payload: { kind: 'AuthorizationCode' },
+        sessionId: null,
         expiresAt: '2026-10-30T12:00:00.000Z',
         consumedAt: null,
       }),
