@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 /**
  * The service-token contract between the OpenID Provider service (the login edge) and the
- * private API. Every route here answers only the service token, and answers 404 while
+ * private API. Every route here answers only the edge's own service token (signed with
+ * `SEAMLESS_OIDC_SERVICE_TOKEN`, never the adapters' secret), and answers 404 while
  * `oidc_provider_enabled` is off. These are not the public OIDC endpoints, which the edge serves.
  *
  * Bump when a change here needs both sides to move together. The edge refuses to start
