@@ -4,7 +4,9 @@ import {
   AuthenticatorPolicySchema,
   DefaultLockoutPolicy,
   OAuthProviderConfigSchema,
+  OAuthProviderCreateSchema,
   OAuthProviderUpdateSchema,
+  missingOAuthProviderEndpoints,
   PublicSystemConfigResponseSchema,
   SystemConfigPatchSchema,
   SystemConfigSchema,
@@ -669,5 +671,44 @@ describe('SystemConfigSchema OpenID Provider keys', () => {
 
     expect('oidc_provider_enabled' in parsed).toBe(false);
     expect('oidc_issuer' in parsed).toBe(false);
+  });
+});
+
+describe('OAuthProviderCreateSchema endpoints', () => {
+  const withoutEndpoints = {
+    id: baseProvider.id,
+    name: baseProvider.name,
+    clientId: baseProvider.clientId,
+    clientSecretEnv: baseProvider.clientSecretEnv,
+  };
+
+  it('accepts a provider with only an issuer to discover its endpoints from', () => {
+    const parsed = OAuthProviderCreateSchema.parse({
+      ...withoutEndpoints,
+      issuer: 'https://idp.example.com',
+    });
+
+    expect(parsed.authorizationUrl).toBeUndefined();
+  });
+
+  it('names every endpoint a provider without an issuer is missing', () => {
+    const result = OAuthProviderCreateSchema.safeParse({
+      ...withoutEndpoints,
+      tokenUrl: 'https://idp.example.com/token',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.path[0])).toEqual([
+      'authorizationUrl',
+      'userInfoUrl',
+    ]);
+  });
+
+  it('still accepts a fully hand-configured provider', () => {
+    expect(OAuthProviderCreateSchema.safeParse(baseProvider).success).toBe(true);
+  });
+
+  it('reports no missing endpoints for a provider with an issuer', () => {
+    expect(missingOAuthProviderEndpoints({ issuer: 'https://idp.example.com' })).toEqual([]);
   });
 });
