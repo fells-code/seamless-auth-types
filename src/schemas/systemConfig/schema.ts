@@ -71,9 +71,14 @@ export const OAuthProviderConfigSchema = z.object({
   // The secret itself never lives in config; this names the environment
   // variable the server reads it from.
   clientSecretEnv: OAuthClientSecretEnvSchema,
-  authorizationUrl: ProviderUrlSchema,
-  tokenUrl: ProviderUrlSchema,
-  userInfoUrl: ProviderUrlSchema,
+  /**
+   * With `issuer` set, any of the endpoints below that is left out is read from the
+   * issuer's `/.well-known/openid-configuration` when the provider is used. Without an
+   * issuer, `authorizationUrl`, `tokenUrl` and `userInfoUrl` are all required.
+   */
+  authorizationUrl: ProviderUrlSchema.optional(),
+  tokenUrl: ProviderUrlSchema.optional(),
+  userInfoUrl: ProviderUrlSchema.optional(),
   scopes: z.array(z.string().trim().min(1)).default([]),
   redirectUri: z.url().optional(),
   redirectUris: z.array(z.url()).default([]),
@@ -571,7 +576,30 @@ export function createPatchSystemConfigSchema(existing: SystemConfig) {
   });
 }
 
-export const OAuthProviderCreateSchema = OAuthProviderConfigSchema;
+/** The endpoints a provider without an issuer must name, since nothing can be discovered for it. */
+export const OAUTH_PROVIDER_REQUIRED_ENDPOINTS = [
+  'authorizationUrl',
+  'tokenUrl',
+  'userInfoUrl',
+] as const;
+
+export function missingOAuthProviderEndpoints(
+  provider: Partial<Record<(typeof OAUTH_PROVIDER_REQUIRED_ENDPOINTS)[number] | 'issuer', unknown>>,
+) {
+  return provider.issuer
+    ? []
+    : OAUTH_PROVIDER_REQUIRED_ENDPOINTS.filter((field) => !provider[field]);
+}
+
+export const OAuthProviderCreateSchema = OAuthProviderConfigSchema.superRefine((provider, ctx) => {
+  for (const field of missingOAuthProviderEndpoints(provider)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [field],
+      message: `${field} is required unless the provider has an issuer to discover it from`,
+    });
+  }
+});
 
 export type OAuthProviderCreate = z.infer<typeof OAuthProviderCreateSchema>;
 
