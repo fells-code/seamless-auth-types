@@ -11,6 +11,7 @@ import {
   OidcPayloadRecordSchema,
   OidcPayloadUpsertRequestSchema,
   OidcSignRefusalSchema,
+  OidcPayloadConsumeResponseSchema,
   OidcSignRequestSchema,
 } from './schema.js';
 
@@ -261,5 +262,14 @@ describe('OidcAccountQuerySchema', () => {
   it('requires the client and session the lookup serves', () => {
     expect(() => OidcAccountQuerySchema.parse({ clientId: 'app' })).toThrow();
     expect(() => OidcAccountQuerySchema.parse({ clientId: 'app', sessionId: 's1' })).not.toThrow();
+  });
+});
+
+describe('OidcPayloadConsumeResponseSchema', () => {
+  it('says whether this caller consumed the record', () => {
+    expect(OidcPayloadConsumeResponseSchema.parse({ consumed: false })).toEqual({
+      consumed: false,
+    });
+    expect(() => OidcPayloadConsumeResponseSchema.parse({})).toThrow();
   });
 });
