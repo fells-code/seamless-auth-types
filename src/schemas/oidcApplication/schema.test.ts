@@ -69,6 +69,7 @@ describe('OidcApplicationCreateRequestSchema', () => {
       grantTypes: ['authorization_code', 'refresh_token'],
       deviceFlowEnabled: false,
       noticesEnabled: false,
+      pkceRequired: true,
     });
   });
 
@@ -126,6 +127,7 @@ describe('OidcApplicationCreateRequestSchema', () => {
       { redirectUris: ['https://a.example.com/cb', 'https://a.example.com/cb'] },
     ],
     ['an access token lifetime over a day', { accessTokenTtlSeconds: 86_401 }],
+    ['a public client without PKCE', { clientType: 'public', pkceRequired: false }],
     ['an unknown field', { client_secret: 'x' }],
   ])('refuses %s', (_label, change) => {
     expect(OidcApplicationCreateRequestSchema.safeParse({ ...web, ...change }).success).toBe(false);
@@ -139,6 +141,19 @@ describe('OidcApplicationCreateRequestSchema', () => {
         firstParty: true,
         grantTypes: ['refresh_token'],
         deviceFlowEnabled: true,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('lets a confidential client opt out of PKCE', () => {
+    expect(OidcApplicationCreateRequestSchema.parse({ ...web, pkceRequired: false })).toMatchObject(
+      { pkceRequired: false },
+    );
+    expect(
+      OidcApplicationCreateRequestSchema.safeParse({
+        ...web,
+        tokenEndpointAuthMethod: 'client_secret_basic',
+        pkceRequired: false,
       }).success,
     ).toBe(true);
   });

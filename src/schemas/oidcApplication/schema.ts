@@ -9,8 +9,9 @@ import { OidcPublicJwkSchema, OidcTokenEndpointAuthMethodSchema } from '../oidcE
  *
  * The settings here cannot express the configurations ADR D1, D6 and D10 forbid: public
  * clients never hold keys or secrets, redirects are exact except the RFC 8252 loopback
- * port, `localhost` is never a redirect host, the device grant is first-party only, and
- * implicit, hybrid, password and `client_secret_jwt` cannot be named at all.
+ * port, `localhost` is never a redirect host, the device grant is first-party only, PKCE
+ * can be waived only for a confidential client, and implicit, hybrid, password and
+ * `client_secret_jwt` cannot be named at all.
  */
 export const OidcApplicationRoutes = {
   applications: '/admin/applications',
@@ -157,6 +158,11 @@ const applicationShape = {
   deviceFlowEnabled: z.boolean(),
   /** Lets the application send account notices to its own users (ADR D14). */
   noticesEnabled: z.boolean(),
+  /**
+   * PKCE is required by default. A confidential client may opt out (RFC 9700 section
+   * 2.1.1), and then must send `nonce` on every request for an ID token instead.
+   */
+  pkceRequired: z.boolean(),
   backchannelLogoutUri: HttpsUrlSchema.nullable(),
   accessTokenTtlSeconds: TokenTtlSchema,
   idTokenTtlSeconds: TokenTtlSchema,
@@ -170,6 +176,7 @@ type ApplicationChecked = {
   redirectUris: string[];
   grantTypes: OidcApplicationGrantType[];
   deviceFlowEnabled: boolean;
+  pkceRequired?: boolean | undefined;
   jwks?: OidcApplicationJwks | null | undefined;
   jwksUri?: string | null | undefined;
 };
@@ -220,6 +227,9 @@ export function checkOidcApplication(app: ApplicationChecked, ctx: z.RefinementC
   if (app.deviceFlowEnabled && !app.firstParty) {
     issue('deviceFlowEnabled', 'the device grant is only available to first-party clients');
   }
+  if (app.pkceRequired === false && (app.clientType === 'public' || method === 'none')) {
+    issue('pkceRequired', 'public clients must use PKCE');
+  }
 }
 
 export const OidcApplicationCreateRequestSchema = z
@@ -232,6 +242,7 @@ export const OidcApplicationCreateRequestSchema = z
     grantTypes: applicationShape.grantTypes.default(['authorization_code', 'refresh_token']),
     deviceFlowEnabled: applicationShape.deviceFlowEnabled.default(false),
     noticesEnabled: applicationShape.noticesEnabled.default(false),
+    pkceRequired: applicationShape.pkceRequired.default(true),
     backchannelLogoutUri: applicationShape.backchannelLogoutUri.optional(),
     accessTokenTtlSeconds: TokenTtlSchema.optional(),
     idTokenTtlSeconds: TokenTtlSchema.optional(),
@@ -259,6 +270,7 @@ export const OidcApplicationUpdateRequestSchema = z
     grantTypes: applicationShape.grantTypes,
     deviceFlowEnabled: applicationShape.deviceFlowEnabled,
     noticesEnabled: applicationShape.noticesEnabled,
+    pkceRequired: applicationShape.pkceRequired,
     backchannelLogoutUri: applicationShape.backchannelLogoutUri,
     accessTokenTtlSeconds: applicationShape.accessTokenTtlSeconds,
     idTokenTtlSeconds: applicationShape.idTokenTtlSeconds,
@@ -298,6 +310,7 @@ export const OidcApplicationSchema = z.object({
   grantTypes: z.array(OidcApplicationGrantTypeSchema),
   deviceFlowEnabled: z.boolean(),
   noticesEnabled: z.boolean(),
+  pkceRequired: z.boolean(),
   jwks: OidcApplicationJwksSchema.nullable(),
   jwksUri: z.string().nullable(),
   /** Whether a shared secret is set. The secret itself is only ever returned once. */
