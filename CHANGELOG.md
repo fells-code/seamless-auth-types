@@ -1,5 +1,25 @@
 # @seamless-auth/types
 
+## 0.34.0-next.1
+
+### Minor Changes
+
+- 10a59c2: Adds the `oidcApplication` module for managing the OpenID Provider's applications (clients) and the APIs (resources) they may request tokens for, on the API's `/admin/applications` and `/admin/resources` routes (ADR 0001, D5, D6, D10 and D12).
+  
+  - Application create, update, keys, secret and response schemas. Public clients authenticate with PKCE alone and can hold no keys, secret or `client_credentials` grant. Confidential clients default to `private_key_jwt`. The device grant is a `deviceFlowEnabled` toggle that only first-party clients may set. Implicit, hybrid, password and `client_secret_jwt` cannot be expressed. `checkOidcApplication` holds the cross-field rules so the API can re-run them on the merged result of an update.
+  - Redirect URIs follow RFC 8252: exact `https` URIs, `http` on `127.0.0.1` or `[::1]` with any port at request time, and private-use schemes in reverse domain form. `localhost`, fragments and embedded credentials are refused. `oidcRedirectUriProblem` and `oidcRedirectUriKind` expose the rule.
+  - Resource schemas (RFC 8707 identifier, declared scopes, access token lifetime) and each application's allowed resources and scopes. The OpenID Connect scopes and `seamless` are reserved.
+  - `OidcApplicationRoutes` lists the admin paths.
+  - `admin_oidc_*` auth event types for every application and resource change.
+  
+  `SystemConfigSchema` and `SystemConfigPatchSchema` gain `hosted_ui` (default `null`): branding for the provider's hosted pages, with an app name override, an `https` logo URL, hex colors and a font stack, each constrained so it cannot break out of a CSS declaration. The inferred `SystemConfig` type gains a required field, so code that builds a full config object by hand needs it.
+- ffee050: Adds the `oidc` module: the public side of the OpenID Provider (fells-code/seamless-auth-api ADR 0001, D9 and D11), which resource servers and the adapters' verify-only guards read.
+  
+  - `OidcAccessTokenClaimsSchema` (RFC 9068 JWT access tokens, header `typ` `OIDC_ACCESS_TOKEN_TYP`) and `OidcIdTokenClaimsSchema`, with `iss`, `sub`, `aud`, `scope`, `client_id`, `sid`, `org_id`, `roles`, `acr`, `amr`, `auth_time` and `cnf`. `acr` and `amr` reuse `OidcAcrValueSchema` and `OidcAmrValueSchema` from `oidcEdge`. `parseOidcScope` splits a `scope` claim.
+  - `OidcDiscoveryDocumentSchema` for `/.well-known/openid-configuration`, including `acr_values_supported` and `device_authorization_endpoint`.
+  - `OidcTokenResponseSchema` (authorization code, refresh and device code grants), `OidcClientCredentialsTokenResponseSchema`, and `OidcTokenErrorResponseSchema` with the RFC 6749, RFC 8707 and RFC 8628 error codes.
+  - `OidcStepUpChallengeSchema` (the RFC 9470 `insufficient_user_authentication` challenge), `OidcInsufficientScopeErrorSchema` and `OidcBearerErrorCodeSchema`, the bodies every Seamless verify-only guard answers with.
+
 ## 0.34.0-next.0
 
 ### Minor Changes
