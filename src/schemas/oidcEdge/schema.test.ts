@@ -4,6 +4,7 @@ import {
   OidcAuthContextSchema,
   OidcClientMetadataSchema,
   OidcClientResourcesResponseSchema,
+  OidcEdgeConfigResponseSchema,
   OidcEdgeEventSchema,
   OidcJwksResponseSchema,
   OidcPayloadParamsSchema,
@@ -12,6 +13,39 @@ import {
   OidcSignRefusalSchema,
   OidcSignRequestSchema,
 } from './schema.js';
+
+const edgeConfig = {
+  contractVersion: 1,
+  issuer: 'https://login.example.com',
+  appName: 'Acme',
+  allowClientSecrets: false,
+  thirdPartyClientsEnabled: false,
+};
+
+describe('OidcEdgeConfigResponseSchema', () => {
+  it('accepts a config with no branding', () => {
+    expect(OidcEdgeConfigResponseSchema.parse(edgeConfig)).toEqual(edgeConfig);
+  });
+
+  it('carries hosted page branding', () => {
+    const hostedUi = {
+      logoUrl: 'https://cdn.example.com/logo.svg',
+      colors: { primary: '#123456' },
+    };
+    expect(OidcEdgeConfigResponseSchema.parse({ ...edgeConfig, hostedUi }).hostedUi).toEqual(
+      hostedUi,
+    );
+  });
+
+  it('refuses branding the hosted pages could not inject safely', () => {
+    expect(
+      OidcEdgeConfigResponseSchema.safeParse({
+        ...edgeConfig,
+        hostedUi: { colors: { primary: 'red;}' } },
+      }).success,
+    ).toBe(false);
+  });
+});
 
 const signingInput = 'eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ';
 
