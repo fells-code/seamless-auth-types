@@ -330,6 +330,44 @@ export const AccountRecoveryPolicySchema = z.object({
 
 export type AccountRecoveryPolicy = z.infer<typeof AccountRecoveryPolicySchema>;
 
+const HexColorSchema = z
+  .string()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, { message: 'must be a hex color' });
+
+/**
+ * Branding for the OpenID Provider service's hosted pages (ADR 0001, D7). The service
+ * injects these into its pages as CSS variables at serve time, so every value is
+ * constrained to a form that cannot break out of a CSS declaration.
+ */
+export const HostedUiSchema = z
+  .object({
+    /** Shown in place of `app_name` on the hosted pages. */
+    appName: z.string().trim().min(1).max(100).optional(),
+    logoUrl: z
+      .url({ protocol: /^https$/ })
+      .max(2048)
+      .optional(),
+    colors: z
+      .object({
+        primary: HexColorSchema.optional(),
+        onPrimary: HexColorSchema.optional(),
+        background: HexColorSchema.optional(),
+        surface: HexColorSchema.optional(),
+        text: HexColorSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    /** A CSS font stack of installed or system fonts, such as `Inter, system-ui, sans-serif`. */
+    fontFamily: z
+      .string()
+      .max(200)
+      .regex(/^[A-Za-z0-9 ,'-]+$/, { message: 'must be a list of font names' })
+      .optional(),
+  })
+  .strict();
+
+export type HostedUi = z.infer<typeof HostedUiSchema>;
+
 export const SystemConfigSchema = z.object({
   app_name: z.string().min(3),
   default_roles: z.array(RoleNameSchema).min(1),
@@ -429,6 +467,8 @@ export const SystemConfigSchema = z.object({
   /** Lets an admin opt individual provider clients in to shared secrets. */
   allow_client_secrets: z.boolean().default(false),
   third_party_clients_enabled: z.boolean().default(false),
+  /** Branding for the provider's hosted pages, or `null` for the defaults. */
+  hosted_ui: HostedUiSchema.nullable().default(null),
 });
 
 export type SystemConfig = z.infer<typeof SystemConfigSchema>;
@@ -462,6 +502,7 @@ export const SystemConfigPatchSchema = z
     oidc_issuer: z.url().nullable().optional(),
     allow_client_secrets: z.boolean().optional(),
     third_party_clients_enabled: z.boolean().optional(),
+    hosted_ui: HostedUiSchema.nullable().optional(),
   })
   .strict();
 

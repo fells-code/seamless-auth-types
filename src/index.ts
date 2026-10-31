@@ -23,3 +23,4 @@ export * from './schemas/recovery/schema.js';
 export * from './schemas/policy/schema.js';
 export * from './schemas/oidcEdge/schema.js';
 export * from './schemas/oidc/schema.js';
+export * from './schemas/oidcApplication/schema.js';
