@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { AuthDeliverySchema, DeliveryResultSchema } from './schema.js';
+import {
+  AuthDeliverySchema,
+  DeliveryResultSchema,
+  EmailMessageSchema,
+  SendEnrollmentInviteEmailInputSchema,
+} from './schema.js';
 
 describe('AuthDeliverySchema', () => {
   it('parses an email OTP delivery', () => {
@@ -99,5 +104,41 @@ describe('DeliveryResultSchema', () => {
     expect(() =>
       DeliveryResultSchema.parse({ accepted: true, provider: 'ses', channel: 'fax' }),
     ).toThrow();
+  });
+});
+
+describe('EmailMessageSchema', () => {
+  const message = { to: 'user@example.com', subject: 'Hello', text: 'Hi' };
+
+  it('parses a message without headers', () => {
+    expect(EmailMessageSchema.parse(message).headers).toBeUndefined();
+  });
+
+  it('keeps custom headers', () => {
+    const headers = {
+      'List-Unsubscribe': '<https://example.com/unsubscribe>',
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    };
+
+    expect(EmailMessageSchema.parse({ ...message, headers }).headers).toEqual(headers);
+  });
+
+  it('rejects a header value that is not a string', () => {
+    expect(() => EmailMessageSchema.parse({ ...message, headers: { 'X-Count': 1 } })).toThrow();
+  });
+});
+
+describe('SendEnrollmentInviteEmailInputSchema', () => {
+  it('parses an invite with only the required fields', () => {
+    expect(() =>
+      SendEnrollmentInviteEmailInputSchema.parse({
+        to: 'user@example.com',
+        signInUrl: 'https://example.com/sign-in',
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects an invite without a sign-in URL', () => {
+    expect(() => SendEnrollmentInviteEmailInputSchema.parse({ to: 'user@example.com' })).toThrow();
   });
 });

@@ -20,6 +20,9 @@ export const EmailMessageSchema = z.object({
   subject: z.string(),
   text: z.string(),
   html: z.string().optional(),
+  // Passed through as given, such as `List-Unsubscribe`. A transport that cannot send custom
+  // headers ignores them, and the messaging transports refuse names that would inject more.
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 export type EmailMessage = z.infer<typeof EmailMessageSchema>;
@@ -58,6 +61,16 @@ export const SendMagicLinkEmailInputSchema = z.object({
 });
 
 export type SendMagicLinkEmailInput = z.infer<typeof SendMagicLinkEmailInputSchema>;
+
+export const SendEnrollmentInviteEmailInputSchema = z.object({
+  to: z.string(),
+  // The sign-in page. It carries no credential, so it signs nobody in on its own.
+  signInUrl: z.string(),
+  from: z.string().optional(),
+  subject: z.string().optional(),
+});
+
+export type SendEnrollmentInviteEmailInput = z.infer<typeof SendEnrollmentInviteEmailInputSchema>;
 
 /**
  * What the auth API tells a self-hosted server to deliver. The API never sends
