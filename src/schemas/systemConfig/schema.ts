@@ -364,9 +364,15 @@ export const HostedUiSchema = z
         message: 'must not contain quotes, parentheses, spaces or semicolons',
       })
       .refine((value) => {
-        const url = new URL(value);
-        return url.username === '' && url.password === '';
-      }, 'must not carry credentials')
+        try {
+          const url = new URL(value);
+          return (
+            url.username === '' && url.password === '' && /^[A-Za-z0-9.-]+$/.test(url.hostname)
+          );
+        } catch {
+          return false;
+        }
+      }, 'must name a plain host and carry no credentials')
       .optional(),
     colors: z
       .object({
