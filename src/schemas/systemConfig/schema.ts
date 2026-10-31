@@ -334,6 +334,9 @@ const HexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, { message: 'must be a hex color' });
 
+const FONT_NAME = "(?:[A-Za-z][A-Za-z0-9-]*(?: [A-Za-z0-9-]+)*|'[A-Za-z0-9][A-Za-z0-9 -]*')";
+const FONT_STACK = new RegExp(`^${FONT_NAME}(?:, ?${FONT_NAME})*$`);
+
 /**
  * Branding for the OpenID Provider service's hosted pages (ADR 0001, D7). The service
  * injects these into its pages as CSS variables at serve time, so every value is
@@ -342,10 +345,28 @@ const HexColorSchema = z
 export const HostedUiSchema = z
   .object({
     /** Shown in place of `app_name` on the hosted pages. */
-    appName: z.string().trim().min(1).max(100).optional(),
+    appName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(/^[^\p{Cc}]+$/u, { message: 'must not contain control characters' })
+      .optional(),
+    /**
+     * An https image the pages show as the logo. The service allows its origin in the
+     * pages' `img-src`, so the URL carries no credentials and none of the characters
+     * that could end a CSS `url()` or an HTML attribute.
+     */
     logoUrl: z
       .url({ protocol: /^https$/ })
       .max(2048)
+      .regex(/^https:\/\/[A-Za-z0-9._~:/?#[\]@!$&*+,=%-]+$/, {
+        message: 'must not contain quotes, parentheses, spaces or semicolons',
+      })
+      .refine((value) => {
+        const url = new URL(value);
+        return url.username === '' && url.password === '';
+      }, 'must not carry credentials')
       .optional(),
     colors: z
       .object({
@@ -354,14 +375,19 @@ export const HostedUiSchema = z
         background: HexColorSchema.optional(),
         surface: HexColorSchema.optional(),
         text: HexColorSchema.optional(),
+        muted: HexColorSchema.optional(),
       })
       .strict()
       .optional(),
-    /** A CSS font stack of installed or system fonts, such as `Inter, system-ui, sans-serif`. */
+    /**
+     * A CSS font stack of installed or system fonts, such as `Inter, system-ui, sans-serif`.
+     * The pages load no web fonts (`font-src 'self'`). Quoted names use single quotes and
+     * must close, so a value cannot leave an unterminated string in the page's styles.
+     */
     fontFamily: z
       .string()
       .max(200)
-      .regex(/^[A-Za-z0-9 ,'-]+$/, { message: 'must be a list of font names' })
+      .regex(FONT_STACK, { message: 'must be a comma separated list of font names' })
       .optional(),
   })
   .strict();
