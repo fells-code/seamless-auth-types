@@ -3,6 +3,7 @@ import {
   OidcAccountQuerySchema,
   OidcAuthContextSchema,
   OidcClientMetadataSchema,
+  OidcClientResourcesResponseSchema,
   OidcEdgeConfigResponseSchema,
   OidcEdgeEventSchema,
   OidcJwksResponseSchema,
@@ -182,6 +183,30 @@ describe('OidcClientMetadataSchema', () => {
     expect(OidcClientMetadataSchema.parse({ ...client, client_secret: 's' })).not.toHaveProperty(
       'client_secret',
     );
+  });
+});
+
+describe('OidcClientResourcesResponseSchema', () => {
+  it('parses a resource with allowed scopes', () => {
+    expect(
+      OidcClientResourcesResponseSchema.parse({
+        resources: [
+          {
+            identifier: 'https://api.example.com',
+            scopes: ['orders:read'],
+            accessTokenTtlSeconds: null,
+          },
+        ],
+      }).resources[0],
+    ).toMatchObject({ identifier: 'https://api.example.com', scopes: ['orders:read'] });
+  });
+
+  it('rejects an identifier that is not a URL', () => {
+    expect(() =>
+      OidcClientResourcesResponseSchema.parse({
+        resources: [{ identifier: 'orders', scopes: [], accessTokenTtlSeconds: 600 }],
+      }),
+    ).toThrow();
   });
 });
 

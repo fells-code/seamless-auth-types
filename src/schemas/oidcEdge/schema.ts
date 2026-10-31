@@ -24,6 +24,7 @@ export const OidcEdgeRoutes = {
   jwks: '/oidc/jwks',
   client: '/oidc/clients/:id',
   clientVerifySecret: '/oidc/clients/:id/verify-secret',
+  clientResources: '/oidc/clients/:id/resources',
   account: '/oidc/accounts/:id',
   sessionAuthContext: '/oidc/sessions/:id/auth-context',
   sessionRevoke: '/oidc/sessions/:id/revoke',
@@ -260,6 +261,26 @@ export const OidcVerifySecretResponseSchema = z.object({
 });
 
 export type OidcVerifySecretResponse = z.infer<typeof OidcVerifySecretResponseSchema>;
+
+/**
+ * A resource an active client may ask for an access token for (RFC 8707). `identifier` is
+ * the token's `aud`, compared exactly. `scopes` is what the client is allowed there, already
+ * narrowed to what the resource declares: `/oidc/sign` refuses anything outside it.
+ */
+export const OidcClientResourceSchema = z.object({
+  identifier: z.url(),
+  scopes: z.array(z.string().min(1)),
+  accessTokenTtlSeconds: z.number().int().positive().nullable(),
+});
+
+export type OidcClientResource = z.infer<typeof OidcClientResourceSchema>;
+
+/** 404 for a client that does not exist or is not active. */
+export const OidcClientResourcesResponseSchema = z.object({
+  resources: z.array(OidcClientResourceSchema),
+});
+
+export type OidcClientResourcesResponse = z.infer<typeof OidcClientResourcesResponseSchema>;
 
 export const OidcAccountIdParamsSchema = z.object({
   id: OidcIdentifierSchema,
