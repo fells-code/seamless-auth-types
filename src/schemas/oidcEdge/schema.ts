@@ -11,7 +11,7 @@ import { HostedUiSchema } from '../systemConfig/schema.js';
  * Bump when a change here needs both sides to move together. The edge refuses to start
  * against an API that reports a different value.
  */
-export const OIDC_EDGE_CONTRACT_VERSION = 1;
+export const OIDC_EDGE_CONTRACT_VERSION = 2;
 
 export const OidcEdgeRoutes = {
   config: '/oidc/config',
@@ -128,6 +128,18 @@ export const OidcSignKindSchema = z.enum(['id_token', 'access_token', 'client_cr
 export type OidcSignKind = z.infer<typeof OidcSignKindSchema>;
 
 /**
+ * The grant a user token's authorization was made with. A refresh names the grant it
+ * continues, so tokens refreshed from a device approval still say device code: the API
+ * never signs `acr` into those (ADR 0001, D10).
+ */
+export const OidcUserGrantTypeSchema = z.enum([
+  'authorization_code',
+  'urn:ietf:params:oauth:grant-type:device_code',
+]);
+
+export type OidcUserGrantType = z.infer<typeof OidcUserGrantTypeSchema>;
+
+/**
  * `signingInput` is the JWS signing input the library hands an external key: the base64url
  * protected header and payload joined by a dot. The API decodes and checks both before it
  * signs, so the edge cannot get a signature over claims the API would refuse.
@@ -138,15 +150,28 @@ export const OidcSignRequestSchema = z
     kid: z.string().min(1),
     clientId: z.string().min(1),
     sessionId: z.string().min(1).optional(),
+    grantType: OidcUserGrantTypeSchema.optional(),
     signingInput: z.string().regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/),
   })
   .superRefine((value, ctx) => {
-    if (value.kind !== 'client_credentials' && !value.sessionId) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['sessionId'],
-        message: 'sessionId is required unless kind is client_credentials',
-      });
+    if (value.kind === 'client_credentials') {
+      if (value.grantType) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['grantType'],
+          message: 'grantType is only for user tokens',
+        });
+      }
+      return;
+    }
+    for (const key of ['sessionId', 'grantType'] as const) {
+      if (!value[key]) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [key],
+          message: `${key} is required unless kind is client_credentials`,
+        });
+      }
     }
   });
 

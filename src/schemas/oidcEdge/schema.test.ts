@@ -96,6 +96,27 @@ describe('OidcSignRequestSchema', () => {
     ).toThrow(/sessionId/);
   });
 
+  it('requires the grant for user tokens, and refuses one on client credentials', () => {
+    const user = { kind: 'id_token', kid: 'k1', clientId: 'app', sessionId: 's1', signingInput };
+    expect(() => OidcSignRequestSchema.parse(user)).toThrow(/grantType/);
+    expect(() =>
+      OidcSignRequestSchema.parse({
+        ...user,
+        grantType: 'urn:ietf:params:oauth:grant-type:device_code',
+      }),
+    ).not.toThrow();
+    expect(() => OidcSignRequestSchema.parse({ ...user, grantType: 'refresh_token' })).toThrow();
+    expect(() =>
+      OidcSignRequestSchema.parse({
+        kind: 'client_credentials',
+        kid: 'k1',
+        clientId: 'svc',
+        grantType: 'authorization_code',
+        signingInput,
+      }),
+    ).toThrow(/grantType/);
+  });
+
   it('accepts client credentials without a session', () => {
     expect(() =>
       OidcSignRequestSchema.parse({
@@ -114,6 +135,7 @@ describe('OidcSignRequestSchema', () => {
         kid: 'k1',
         clientId: 'app',
         sessionId: 's1',
+        grantType: 'authorization_code',
         signingInput: `${signingInput}.c2ln`,
       }),
     ).toThrow();
