@@ -90,6 +90,7 @@ src/
     metrics/            dashboard metrics, timeseries, anomalies
     admin/              admin-only user detail and recovery contracts
     oidcEdge/           service-token /oidc/* contract with the OpenID Provider service
+    oidc/               provider token claims, discovery, token endpoint, step-up challenge
 ```
 
 - `src/index.ts` is the public surface. A new schema is only exported once it is
