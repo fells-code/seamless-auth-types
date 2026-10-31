@@ -78,9 +78,21 @@ export const AccountNoticeNameSchema = z.enum([
   'account_recovery_completed',
   'recovery_code_used',
   'identity_changed',
+  'application_notice',
 ]);
 
 export type AccountNoticeName = z.infer<typeof AccountNoticeNameSchema>;
+
+/**
+ * The registered application an `application_notice` was sent for. The text already says
+ * so; this is for a server that renders the notice with its own template.
+ */
+export const AccountNoticeApplicationSchema = z.object({
+  clientId: z.string(),
+  name: z.string(),
+});
+
+export type AccountNoticeApplication = z.infer<typeof AccountNoticeApplicationSchema>;
 
 export const AuthDeliverySchema = z.discriminatedUnion('kind', [
   z.object({
@@ -116,6 +128,7 @@ export const AuthDeliverySchema = z.discriminatedUnion('kind', [
     subject: z.string(),
     text: z.string(),
     cancelUrl: z.string().optional(),
+    application: AccountNoticeApplicationSchema.optional(),
   }),
   z.object({
     kind: z.literal('account_notice_sms'),
@@ -123,6 +136,7 @@ export const AuthDeliverySchema = z.discriminatedUnion('kind', [
     to: z.string(),
     text: z.string(),
     cancelUrl: z.string().optional(),
+    application: AccountNoticeApplicationSchema.optional(),
   }),
 ]);
 
