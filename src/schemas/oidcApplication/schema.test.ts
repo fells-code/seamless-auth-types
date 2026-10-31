@@ -286,17 +286,40 @@ describe('HostedUiSchema', () => {
       HostedUiSchema.safeParse({
         appName: 'Acme',
         logoUrl: 'https://cdn.example.com/logo.svg',
-        colors: { primary: '#1a73e8', background: '#fff' },
+        colors: { primary: '#1a73e8', background: '#fff', muted: '#5f6368' },
         fontFamily: "'Inter', system-ui, sans-serif",
       }).success,
     ).toBe(true);
   });
+
+  it.each(['system-ui', 'Inter,system-ui', "'Segoe UI', Roboto, Helvetica Neue, sans-serif"])(
+    'accepts the font stack %s',
+    (fontFamily) => {
+      expect(HostedUiSchema.safeParse({ fontFamily }).success).toBe(true);
+    },
+  );
 
   it.each([
     { colors: { primary: 'red;} body{display:none' } },
     { fontFamily: 'Inter; } * { color: red' },
     { logoUrl: 'http://cdn.example.com/logo.svg' },
     { logoUrl: 'javascript:alert(1)' },
+    { logoUrl: 'data:image/svg+xml,<svg/>' },
+    { logoUrl: 'https://user:pass@cdn.example.com/logo.svg' },
+    { logoUrl: "https://cdn.example.com/logo.svg');background:url('x" },
+    { logoUrl: 'https://cdn.example.com/a logo.svg' },
+    { logoUrl: 'https://x%3Bconnect-src/logo.svg' },
+    { logoUrl: 'https://*/logo.svg' },
+    { logoUrl: 'https://a%2Cb/logo.svg' },
+    { logoUrl: 'https://a%3Bconnect-src%20*/x' },
+    { logoUrl: 'https://cdn.example.com/a"b.svg' },
+    { fontFamily: "'Inter, sans-serif" },
+    { fontFamily: '"Inter", sans-serif' },
+    { fontFamily: 'Inter, , sans-serif' },
+    { fontFamily: 'Inter\\;color:red' },
+    { appName: 'Acme\u0000' },
+    { appName: '   ' },
+    { colors: { muted: 'grey' } },
     { colors: { unknown: '#fff' } },
   ])('refuses %j', (value) => {
     expect(HostedUiSchema.safeParse(value).success).toBe(false);

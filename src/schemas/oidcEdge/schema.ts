@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { HostedUiSchema } from '../systemConfig/schema.js';
+
 /**
  * The service-token contract between the OpenID Provider service (the login edge) and the
  * private API. Every route here answers only the edge's own service token (signed with
@@ -34,6 +36,8 @@ export const OidcEdgeConfigResponseSchema = z.object({
   appName: z.string(),
   allowClientSecrets: z.boolean(),
   thirdPartyClientsEnabled: z.boolean(),
+  /** `hosted_ui` from system config, absent when no branding is set. */
+  hostedUi: HostedUiSchema.optional(),
 });
 
 export type OidcEdgeConfigResponse = z.infer<typeof OidcEdgeConfigResponseSchema>;
