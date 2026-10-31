@@ -246,6 +246,13 @@ export const OidcClientMetadataSchema = z.object({
   backchannel_logout_uri: z.url().optional(),
   backchannel_logout_session_required: z.boolean().optional(),
   'urn:seamless:first_party': z.boolean(),
+  /**
+   * The application's own token lifetimes in seconds, absent where it uses the defaults.
+   * An access token for a resource with its own lifetime takes the shorter of the two.
+   */
+  'urn:seamless:access_token_ttl': z.number().int().positive().optional(),
+  'urn:seamless:id_token_ttl': z.number().int().positive().optional(),
+  'urn:seamless:refresh_token_ttl': z.number().int().positive().optional(),
 });
 
 export type OidcClientMetadata = z.infer<typeof OidcClientMetadataSchema>;

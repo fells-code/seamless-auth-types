@@ -164,6 +164,19 @@ describe('OidcClientMetadataSchema', () => {
     expect(() => OidcClientMetadataSchema.parse(client)).not.toThrow();
   });
 
+  it('carries per-application token lifetimes when set', () => {
+    const parsed = OidcClientMetadataSchema.parse({
+      ...client,
+      'urn:seamless:access_token_ttl': 300,
+      'urn:seamless:id_token_ttl': 600,
+      'urn:seamless:refresh_token_ttl': 86_400,
+    });
+    expect(parsed['urn:seamless:access_token_ttl']).toBe(300);
+    expect(() =>
+      OidcClientMetadataSchema.parse({ ...client, 'urn:seamless:id_token_ttl': 0 }),
+    ).toThrow();
+  });
+
   it('rejects client_secret_jwt', () => {
     expect(() =>
       OidcClientMetadataSchema.parse({
