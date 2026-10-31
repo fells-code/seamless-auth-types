@@ -10,8 +10,8 @@ import { OidcPublicJwkSchema, OidcTokenEndpointAuthMethodSchema } from '../oidcE
  * The settings here cannot express the configurations ADR D1, D6 and D10 forbid: public
  * clients never hold keys or secrets, redirects are exact except the RFC 8252 loopback
  * port, `localhost` is never a redirect host, the device grant is first-party only, PKCE
- * can be waived only for a confidential client, and implicit, hybrid, password and
- * `client_secret_jwt` cannot be named at all.
+ * can be waived only for a confidential client, the nonce rule only once PKCE is waived,
+ * and implicit, hybrid, password and `client_secret_jwt` cannot be named at all.
  */
 export const OidcApplicationRoutes = {
   applications: '/admin/applications',
@@ -160,9 +160,15 @@ const applicationShape = {
   noticesEnabled: z.boolean(),
   /**
    * PKCE is required by default. A confidential client may opt out (RFC 9700 section
-   * 2.1.1), and then must send `nonce` on every request for an ID token instead.
+   * 2.1.1), and then must send `nonce` on every request for an ID token instead, unless
+   * `nonceRequired` is also turned off.
    */
   pkceRequired: z.boolean(),
+  /**
+   * Only meaningful once PKCE is waived. Turning it off as well leaves state and client
+   * authentication as the only defence against code injection.
+   */
+  nonceRequired: z.boolean(),
   backchannelLogoutUri: HttpsUrlSchema.nullable(),
   accessTokenTtlSeconds: TokenTtlSchema,
   idTokenTtlSeconds: TokenTtlSchema,
@@ -177,6 +183,7 @@ type ApplicationChecked = {
   grantTypes: OidcApplicationGrantType[];
   deviceFlowEnabled: boolean;
   pkceRequired?: boolean | undefined;
+  nonceRequired?: boolean | undefined;
   jwks?: OidcApplicationJwks | null | undefined;
   jwksUri?: string | null | undefined;
 };
@@ -230,6 +237,9 @@ export function checkOidcApplication(app: ApplicationChecked, ctx: z.RefinementC
   if (app.pkceRequired === false && (app.clientType === 'public' || method === 'none')) {
     issue('pkceRequired', 'public clients must use PKCE');
   }
+  if (app.nonceRequired === false && app.pkceRequired !== false) {
+    issue('nonceRequired', 'the nonce requirement can only be turned off once PKCE is waived');
+  }
 }
 
 export const OidcApplicationCreateRequestSchema = z
@@ -243,6 +253,7 @@ export const OidcApplicationCreateRequestSchema = z
     deviceFlowEnabled: applicationShape.deviceFlowEnabled.default(false),
     noticesEnabled: applicationShape.noticesEnabled.default(false),
     pkceRequired: applicationShape.pkceRequired.default(true),
+    nonceRequired: applicationShape.nonceRequired.default(true),
     backchannelLogoutUri: applicationShape.backchannelLogoutUri.optional(),
     accessTokenTtlSeconds: TokenTtlSchema.optional(),
     idTokenTtlSeconds: TokenTtlSchema.optional(),
@@ -271,6 +282,7 @@ export const OidcApplicationUpdateRequestSchema = z
     deviceFlowEnabled: applicationShape.deviceFlowEnabled,
     noticesEnabled: applicationShape.noticesEnabled,
     pkceRequired: applicationShape.pkceRequired,
+    nonceRequired: applicationShape.nonceRequired,
     backchannelLogoutUri: applicationShape.backchannelLogoutUri,
     accessTokenTtlSeconds: applicationShape.accessTokenTtlSeconds,
     idTokenTtlSeconds: applicationShape.idTokenTtlSeconds,
@@ -311,6 +323,7 @@ export const OidcApplicationSchema = z.object({
   deviceFlowEnabled: z.boolean(),
   noticesEnabled: z.boolean(),
   pkceRequired: z.boolean(),
+  nonceRequired: z.boolean(),
   jwks: OidcApplicationJwksSchema.nullable(),
   jwksUri: z.string().nullable(),
   /** Whether a shared secret is set. The secret itself is only ever returned once. */

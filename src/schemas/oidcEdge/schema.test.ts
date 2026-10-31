@@ -183,6 +183,11 @@ describe('OidcClientMetadataSchema', () => {
         'urn:seamless:pkce_required'
       ],
     ).toBe(false);
+    expect(
+      OidcClientMetadataSchema.parse({ ...client, 'urn:seamless:nonce_required': false })[
+        'urn:seamless:nonce_required'
+      ],
+    ).toBe(false);
   });
 
   it('rejects client_secret_jwt', () => {
