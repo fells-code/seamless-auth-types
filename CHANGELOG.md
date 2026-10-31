@@ -1,5 +1,15 @@
 # @seamless-auth/types
 
+## 0.34.0-next.2
+
+### Minor Changes
+
+- 6917730: Add schemas for account notices sent on a registered application's behalf (`POST /applications/account-notices`): the request (user, optional channels, subject, text, optional action link), the response (channels and their status, never addresses, plus `deliveries` for a caller that owns delivery), and the error codes. `account_notice_email` and `account_notice_sms` gain an optional `application` naming the sender, `AccountNoticeNameSchema` gains `application_notice`, and the auth events gain `oidc_account_notice_sent` and `oidc_account_notice_failed`. `APPLICATION_NOTICE_SCOPE` and `seamlessBuiltInResource` name the scope and the built-in resource a notices token is for. Code that switches exhaustively on `AccountNoticeName` needs a case for the new value.
+- 5bdd679: `OidcEdgeConfigResponseSchema` gains an optional `hostedUi`, the `hosted_ui` branding from system config, so the OpenID Provider service reads its hosted page branding with the rest of `GET /oidc/config`. It is optional, so `OIDC_EDGE_CONTRACT_VERSION` stays at 1.
+  
+  `HostedUiSchema` gains a `muted` color and validates more tightly, because its values are written into a page served under a strict nonce CSP. `logoUrl` must name a plain host and refuses credentials, quotes, parentheses, spaces and semicolons. `fontFamily` must be a comma separated list of font names where a quoted name uses single quotes and closes. `appName` refuses control characters. A `hosted_ui` value that passed the 0.34.0-next.1 schema but breaks one of these rules is now refused.
+- 9d63af4: Add `OidcEdgeRoutes.clientResources` (`GET /oidc/clients/:id/resources`) with `OidcClientResourceSchema` and `OidcClientResourcesResponseSchema`: the resources an active client may ask for an access token for (RFC 8707), each with its identifier (the token's `aud`), the scopes the client is allowed there and the resource's access token lifetime. The OpenID Provider service reads it to issue RFC 9068 JWT access tokens for a named API. Additive, so `OIDC_EDGE_CONTRACT_VERSION` stays 1; a service on this version treats a 404 from an older API as no resources.
+
 ## 0.34.0-next.1
 
 ### Minor Changes
