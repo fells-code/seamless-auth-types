@@ -177,6 +177,19 @@ describe('OidcClientMetadataSchema', () => {
     ).toThrow();
   });
 
+  it('carries a PKCE opt-out when set', () => {
+    expect(
+      OidcClientMetadataSchema.parse({ ...client, 'urn:seamless:pkce_required': false })[
+        'urn:seamless:pkce_required'
+      ],
+    ).toBe(false);
+    expect(
+      OidcClientMetadataSchema.parse({ ...client, 'urn:seamless:nonce_required': false })[
+        'urn:seamless:nonce_required'
+      ],
+    ).toBe(false);
+  });
+
   it('rejects client_secret_jwt', () => {
     expect(() =>
       OidcClientMetadataSchema.parse({
