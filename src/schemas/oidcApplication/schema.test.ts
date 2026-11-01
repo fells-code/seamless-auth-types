@@ -69,6 +69,8 @@ describe('OidcApplicationCreateRequestSchema', () => {
       grantTypes: ['authorization_code', 'refresh_token'],
       deviceFlowEnabled: false,
       noticesEnabled: false,
+      pkceRequired: true,
+      nonceRequired: true,
     });
   });
 
@@ -126,6 +128,8 @@ describe('OidcApplicationCreateRequestSchema', () => {
       { redirectUris: ['https://a.example.com/cb', 'https://a.example.com/cb'] },
     ],
     ['an access token lifetime over a day', { accessTokenTtlSeconds: 86_401 }],
+    ['a public client without PKCE', { clientType: 'public', pkceRequired: false }],
+    ['no nonce requirement while PKCE is required', { nonceRequired: false }],
     ['an unknown field', { client_secret: 'x' }],
   ])('refuses %s', (_label, change) => {
     expect(OidcApplicationCreateRequestSchema.safeParse({ ...web, ...change }).success).toBe(false);
@@ -141,6 +145,29 @@ describe('OidcApplicationCreateRequestSchema', () => {
         deviceFlowEnabled: true,
       }).success,
     ).toBe(true);
+  });
+
+  it('lets a confidential client opt out of PKCE', () => {
+    expect(OidcApplicationCreateRequestSchema.parse({ ...web, pkceRequired: false })).toMatchObject(
+      { pkceRequired: false },
+    );
+    expect(
+      OidcApplicationCreateRequestSchema.safeParse({
+        ...web,
+        tokenEndpointAuthMethod: 'client_secret_basic',
+        pkceRequired: false,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('lets a client without PKCE turn the nonce requirement off too', () => {
+    expect(
+      OidcApplicationCreateRequestSchema.parse({
+        ...web,
+        pkceRequired: false,
+        nonceRequired: false,
+      }),
+    ).toMatchObject({ pkceRequired: false, nonceRequired: false });
   });
 
   it('allows a client_credentials service with no redirect URI', () => {

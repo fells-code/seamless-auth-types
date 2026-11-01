@@ -282,6 +282,21 @@ export const OidcClientMetadataSchema = z.object({
   backchannel_logout_uri: z.url().optional(),
   backchannel_logout_session_required: z.boolean().optional(),
   'urn:seamless:first_party': z.boolean(),
+  /**
+   * The application's own token lifetimes in seconds, absent where it uses the defaults.
+   * An access token for a resource with its own lifetime takes the shorter of the two.
+   */
+  'urn:seamless:access_token_ttl': z.number().int().positive().optional(),
+  'urn:seamless:id_token_ttl': z.number().int().positive().optional(),
+  'urn:seamless:refresh_token_ttl': z.number().int().positive().optional(),
+  /**
+   * `false` only for a confidential client that opted out of PKCE. Absent or `true` means
+   * PKCE is required. An opted-out client must send `nonce` when it asks for an ID token,
+   * unless `urn:seamless:nonce_required` is also `false`.
+   */
+  'urn:seamless:pkce_required': z.boolean().optional(),
+  /** `false` only alongside `urn:seamless:pkce_required: false`. */
+  'urn:seamless:nonce_required': z.boolean().optional(),
 });
 
 export type OidcClientMetadata = z.infer<typeof OidcClientMetadataSchema>;
