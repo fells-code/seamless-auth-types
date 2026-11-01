@@ -123,6 +123,17 @@ export const OidcPayloadRecordSchema = z.object({
 
 export type OidcPayloadRecord = z.infer<typeof OidcPayloadRecordSchema>;
 
+/**
+ * `consumed` is true only for the one caller that marked the record consumed. Two
+ * refreshes racing with the same token both reach the store, and the one that gets false
+ * must treat the token as reused.
+ */
+export const OidcPayloadConsumeResponseSchema = z.object({
+  consumed: z.boolean(),
+});
+
+export type OidcPayloadConsumeResponse = z.infer<typeof OidcPayloadConsumeResponseSchema>;
+
 export const OidcSignKindSchema = z.enum(['id_token', 'access_token', 'client_credentials']);
 
 export type OidcSignKind = z.infer<typeof OidcSignKindSchema>;
