@@ -11,7 +11,7 @@ import { HostedUiSchema } from '../systemConfig/schema.js';
  * Bump when a change here needs both sides to move together. The edge refuses to start
  * against an API that reports a different value.
  */
-export const OIDC_EDGE_CONTRACT_VERSION = 2;
+export const OIDC_EDGE_CONTRACT_VERSION = 3;
 
 export const OidcEdgeRoutes = {
   config: '/oidc/config',
@@ -27,6 +27,7 @@ export const OidcEdgeRoutes = {
   clientResources: '/oidc/clients/:id/resources',
   account: '/oidc/accounts/:id',
   sessionAuthContext: '/oidc/sessions/:id/auth-context',
+  sessionBind: '/oidc/sessions/:id/bind',
   sessionRevoke: '/oidc/sessions/:id/revoke',
   events: '/oidc/events',
 } as const;
@@ -423,6 +424,20 @@ export const OidcAuthContextSchema = z.object({
 });
 
 export type OidcAuthContext = z.infer<typeof OidcAuthContextSchema>;
+
+/**
+ * Binds a first-party session to the client a provider sign-in is for. `accessToken` is the
+ * user's own access token for that session, which the edge holds only while the user signs
+ * in through it. Until a session is bound, the API answers nothing about it and signs
+ * nothing for it, whatever the edge has stored, and the edge can revoke only a session
+ * bound to some client.
+ */
+export const OidcSessionBindRequestSchema = z.object({
+  clientId: OidcIdentifierSchema,
+  accessToken: z.string().min(1).max(8192),
+});
+
+export type OidcSessionBindRequest = z.infer<typeof OidcSessionBindRequestSchema>;
 
 export const OidcSessionRevokeRequestSchema = z.object({
   reason: z.enum(['refresh_token_reuse', 'provider_logout']),
