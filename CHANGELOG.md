@@ -1,5 +1,18 @@
 # @seamless-auth/types
 
+## 0.34.0-next.4
+
+### Minor Changes
+
+- 9964761: Add the `oidc_backchannel_logout_sent` and `oidc_backchannel_logout_failed` auth event types, which the API writes for each back-channel logout token it delivers or fails to deliver (fells-code/seamless-auth-api#536).
+- c8fe306: `EmailMessageSchema` accepts an optional `headers` record of string names to string values, such as `List-Unsubscribe` and `List-Unsubscribe-Post` for one-click unsubscribe. The inferred `EmailMessage` type gains the optional `headers` field. `@seamless-auth/messaging` already sends these through SES v2 and validates the names and values there.
+  
+  New `SendEnrollmentInviteEmailInputSchema` and `SendEnrollmentInviteEmailInput`: the input for the email that asks a user to sign in and add a passkey. `signInUrl` is the application's normal sign-in page and carries no credential.
+- 0e00355: OpenID Provider applications gain `pkceRequired`, `true` by default. Only a confidential client may set it to `false` (RFC 9700 section 2.1.1); `checkOidcApplication` refuses the opt-out on a public client. `OidcClientMetadata` gains optional `urn:seamless:pkce_required`, sent as `false` only for an opted-out client, which must then send `nonce` whenever it asks for an ID token. Applications also gain `nonceRequired`, `true` by default, which may be turned off only once PKCE is waived; `urn:seamless:nonce_required` carries it to the edge. Adds the `admin_oidc_application_pkce_updated` and `admin_oidc_application_nonce_updated` auth events.
+- 0e00355: `OidcClientMetadata` gains optional `urn:seamless:access_token_ttl`, `urn:seamless:id_token_ttl` and `urn:seamless:refresh_token_ttl` (seconds), the application's `accessTokenTtlSeconds`, `idTokenTtlSeconds` and `refreshTokenTtlSeconds`. Absent means the provider's default. The OpenID Provider service applies them, and an access token for a resource with its own lifetime takes the shorter one.
+- 97b5c18: Add `OidcPayloadConsumeResponseSchema` (`{ consumed: boolean }`) for `POST /oidc/payloads/:model/:id/consume`, which now answers `200` instead of `204`. `consumed` is true only for the caller whose request marked the record consumed, so of two concurrent refreshes with the same token exactly one wins, and the OpenID Provider service treats the other as reuse.
+- 663d947: `OidcSignRequest` gains `grantType` (`OidcUserGrantTypeSchema`: `authorization_code` or `urn:ietf:params:oauth:grant-type:device_code`), required for `id_token` and `access_token` and refused for `client_credentials`. It names the grant the user's authorization was made with, and a refresh names the grant it continues, so the API can refuse `acr` on device-flow tokens (ADR 0001, D10). `OIDC_EDGE_CONTRACT_VERSION` is now 2: the OpenID Provider service and the API must both move to this release, since an edge on version 1 refuses to start against an API on version 2.
+
 ## 0.34.0-next.3
 
 ### Minor Changes
