@@ -501,6 +501,11 @@ export const SystemConfigSchema = z.object({
   oidc_provider_enabled: z.boolean().default(false),
   /** The provider service's public URL. Never equal to the API's own `ISSUER`. */
   oidc_issuer: z.url().nullable().default(null),
+  /**
+   * The application a native admin tool signs in with, advertised on the public config.
+   * The API refuses an application that cannot exchange a sign-in for a session.
+   */
+  oidc_cli_client_id: z.string().min(1).nullable().default(null),
   /** Lets an admin opt individual provider clients in to shared secrets. */
   allow_client_secrets: z.boolean().default(false),
   third_party_clients_enabled: z.boolean().default(false),
@@ -537,6 +542,7 @@ export const SystemConfigPatchSchema = z
     magic_link_redirect_uris: z.array(RedirectTargetSchema).optional(),
     oidc_provider_enabled: z.boolean().optional(),
     oidc_issuer: z.url().nullable().optional(),
+    oidc_cli_client_id: z.string().min(1).nullable().optional(),
     allow_client_secrets: z.boolean().optional(),
     third_party_clients_enabled: z.boolean().optional(),
     hosted_ui: HostedUiSchema.nullable().optional(),
@@ -691,6 +697,14 @@ export const PublicSystemConfigResponseSchema = z.object({
   // screens offer "use a recovery code" and "can't sign in?" only where they work.
   recoveryCodes: z.boolean().optional(),
   accountRecovery: z.boolean().optional(),
+  // Optional so a client still parses an API that predates it. Sent whole or not at all:
+  // an instance without it has no provider sign-in for a native admin tool to offer.
+  oidcProvider: z
+    .object({
+      issuer: z.url(),
+      cliClientId: z.string().min(1),
+    })
+    .optional(),
 });
 
 export type PublicSystemConfigResponse = z.infer<typeof PublicSystemConfigResponseSchema>;
