@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   OidcApplicationCreateRequestSchema,
+  OidcApplicationSchema,
   OidcApplicationKeysRequestSchema,
   OidcApplicationResourcesRequestSchema,
   OidcApplicationUpdateRequestSchema,
@@ -358,6 +359,12 @@ describe('HostedUiSchema', () => {
 });
 
 describe('sessionExchangeEnabled', () => {
+  it('reads as off from an API older than the session exchange', () => {
+    const field = OidcApplicationSchema.shape.sessionExchangeEnabled;
+    expect(field.parse(undefined)).toBe(false);
+    expect(field.parse(true)).toBe(true);
+  });
+
   const nativeClient = {
     name: 'CLI',
     clientType: 'public',
