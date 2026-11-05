@@ -159,6 +159,11 @@ const applicationShape = {
   /** Lets the application send account notices to its own users (ADR D14). */
   noticesEnabled: z.boolean(),
   /**
+   * Lets a first-party public native client exchange a provider sign-in for a first-party
+   * session (ADR 0003). Turning it off revokes the sessions it produced.
+   */
+  sessionExchangeEnabled: z.boolean(),
+  /**
    * PKCE is required by default. A confidential client may opt out (RFC 9700 section
    * 2.1.1), and then must send `nonce` on every request for an ID token instead, unless
    * `nonceRequired` is also turned off.
@@ -182,11 +187,17 @@ type ApplicationChecked = {
   redirectUris: string[];
   grantTypes: OidcApplicationGrantType[];
   deviceFlowEnabled: boolean;
+  sessionExchangeEnabled?: boolean | undefined;
   pkceRequired?: boolean | undefined;
   nonceRequired?: boolean | undefined;
   jwks?: OidcApplicationJwks | null | undefined;
   jwksUri?: string | null | undefined;
 };
+
+function isNativeRedirectUri(uri: string) {
+  const kind = oidcRedirectUriKind(uri);
+  return kind === 'loopback' || kind === 'private_use';
+}
 
 export function defaultOidcTokenEndpointAuthMethod(clientType: OidcClientType) {
   return clientType === 'public' ? ('none' as const) : ('private_key_jwt' as const);
@@ -234,6 +245,18 @@ export function checkOidcApplication(app: ApplicationChecked, ctx: z.RefinementC
   if (app.deviceFlowEnabled && !app.firstParty) {
     issue('deviceFlowEnabled', 'the device grant is only available to first-party clients');
   }
+  if (
+    app.sessionExchangeEnabled &&
+    (!app.firstParty ||
+      app.clientType !== 'public' ||
+      method !== 'none' ||
+      !app.redirectUris.some(isNativeRedirectUri))
+  ) {
+    issue(
+      'sessionExchangeEnabled',
+      'session exchange is only available to a first-party public native client',
+    );
+  }
   if (app.pkceRequired === false && (app.clientType === 'public' || method === 'none')) {
     issue('pkceRequired', 'public clients must use PKCE');
   }
@@ -252,6 +275,7 @@ export const OidcApplicationCreateRequestSchema = z
     grantTypes: applicationShape.grantTypes.default(['authorization_code', 'refresh_token']),
     deviceFlowEnabled: applicationShape.deviceFlowEnabled.default(false),
     noticesEnabled: applicationShape.noticesEnabled.default(false),
+    sessionExchangeEnabled: applicationShape.sessionExchangeEnabled.default(false),
     pkceRequired: applicationShape.pkceRequired.default(true),
     nonceRequired: applicationShape.nonceRequired.default(true),
     backchannelLogoutUri: applicationShape.backchannelLogoutUri.optional(),
@@ -281,6 +305,7 @@ export const OidcApplicationUpdateRequestSchema = z
     grantTypes: applicationShape.grantTypes,
     deviceFlowEnabled: applicationShape.deviceFlowEnabled,
     noticesEnabled: applicationShape.noticesEnabled,
+    sessionExchangeEnabled: applicationShape.sessionExchangeEnabled,
     pkceRequired: applicationShape.pkceRequired,
     nonceRequired: applicationShape.nonceRequired,
     backchannelLogoutUri: applicationShape.backchannelLogoutUri,
@@ -322,6 +347,7 @@ export const OidcApplicationSchema = z.object({
   grantTypes: z.array(OidcApplicationGrantTypeSchema),
   deviceFlowEnabled: z.boolean(),
   noticesEnabled: z.boolean(),
+  sessionExchangeEnabled: z.boolean(),
   pkceRequired: z.boolean(),
   nonceRequired: z.boolean(),
   jwks: OidcApplicationJwksSchema.nullable(),
