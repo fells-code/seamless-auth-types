@@ -674,6 +674,65 @@ describe('SystemConfigSchema OpenID Provider keys', () => {
   });
 });
 
+describe('oidc_cli_client_id', () => {
+  it('is unset when config predates the key, as on the admin read of an older API', () => {
+    expect(SystemConfigSchema.parse(baseConfig).oidc_cli_client_id).toBeNull();
+  });
+
+  it('is patchable, including clearing it', () => {
+    expect(SystemConfigPatchSchema.parse({ oidc_cli_client_id: 'seamless-cli' })).toEqual({
+      oidc_cli_client_id: 'seamless-cli',
+    });
+    expect(SystemConfigPatchSchema.parse({ oidc_cli_client_id: null })).toEqual({
+      oidc_cli_client_id: null,
+    });
+  });
+
+  it('is not injected into a patch that does not name it', () => {
+    expect('oidc_cli_client_id' in SystemConfigPatchSchema.parse({ app_name: 'Seamless' })).toBe(
+      false,
+    );
+  });
+
+  it.each(['', 42])('refuses %j', (value) => {
+    expect(SystemConfigPatchSchema.safeParse({ oidc_cli_client_id: value }).success).toBe(false);
+    expect(SystemConfigSchema.safeParse({ ...baseConfig, oidc_cli_client_id: value }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe('PublicSystemConfigResponseSchema oidcProvider', () => {
+  const previous = { loginMethods: ['passkey'], recoveryCodes: true, accountRecovery: false };
+  const oidcProvider = { issuer: 'https://login.example.com', cliClientId: 'seamless-cli' };
+
+  it('still parses the answer of an API that predates the field', () => {
+    const parsed = PublicSystemConfigResponseSchema.parse(previous);
+
+    expect(parsed).toEqual(previous);
+    expect('oidcProvider' in parsed).toBe(false);
+  });
+
+  it('carries the issuer and client when advertised', () => {
+    expect(PublicSystemConfigResponseSchema.parse({ ...previous, oidcProvider })).toEqual({
+      ...previous,
+      oidcProvider,
+    });
+  });
+
+  it.each([
+    [{ issuer: oidcProvider.issuer }],
+    [{ cliClientId: oidcProvider.cliClientId }],
+    [{ issuer: null, cliClientId: oidcProvider.cliClientId }],
+    [{ ...oidcProvider, cliClientId: '' }],
+    [{ ...oidcProvider, issuer: 'login' }],
+  ])('refuses the partial or malformed advertisement %j', (partial) => {
+    expect(
+      PublicSystemConfigResponseSchema.safeParse({ ...previous, oidcProvider: partial }).success,
+    ).toBe(false);
+  });
+});
+
 describe('OAuthProviderCreateSchema endpoints', () => {
   const withoutEndpoints = {
     id: baseProvider.id,
