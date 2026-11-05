@@ -347,7 +347,8 @@ export const OidcApplicationSchema = z.object({
   grantTypes: z.array(OidcApplicationGrantTypeSchema),
   deviceFlowEnabled: z.boolean(),
   noticesEnabled: z.boolean(),
-  sessionExchangeEnabled: z.boolean(),
+  /** Absent from an API older than v0.23, which has no session exchange. */
+  sessionExchangeEnabled: z.boolean().default(false),
   pkceRequired: z.boolean(),
   nonceRequired: z.boolean(),
   jwks: OidcApplicationJwksSchema.nullable(),
