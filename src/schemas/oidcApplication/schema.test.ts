@@ -356,3 +356,55 @@ describe('HostedUiSchema', () => {
     expect(SystemConfigPatchSchema.parse({ hosted_ui: null })).toEqual({ hosted_ui: null });
   });
 });
+
+describe('sessionExchangeEnabled', () => {
+  const nativeClient = {
+    name: 'CLI',
+    clientType: 'public',
+    firstParty: true,
+    redirectUris: ['http://127.0.0.1/callback'],
+    sessionExchangeEnabled: true,
+  };
+
+  it('defaults to off', () => {
+    const parsed = OidcApplicationCreateRequestSchema.parse({
+      ...nativeClient,
+      sessionExchangeEnabled: undefined,
+    });
+    expect(parsed.sessionExchangeEnabled).toBe(false);
+  });
+
+  it('is allowed on a first-party public client with a loopback or private-use redirect', () => {
+    expect(OidcApplicationCreateRequestSchema.safeParse(nativeClient).success).toBe(true);
+    expect(
+      OidcApplicationCreateRequestSchema.safeParse({
+        ...nativeClient,
+        redirectUris: ['com.example.cli:/callback'],
+      }).success,
+    ).toBe(true);
+  });
+
+  it.each([
+    ['a third-party client', { firstParty: false }],
+    [
+      'a confidential client',
+      {
+        clientType: 'confidential',
+        tokenEndpointAuthMethod: 'private_key_jwt',
+        jwksUri: 'https://app.example.com/jwks',
+      },
+    ],
+    ['a web client', { redirectUris: ['https://app.example.com/callback'] }],
+    ['a client with no redirect', { redirectUris: [], grantTypes: [], deviceFlowEnabled: true }],
+  ])('is refused on %s', (_name, overrides) => {
+    const parsed = OidcApplicationCreateRequestSchema.safeParse({ ...nativeClient, ...overrides });
+    expect(parsed.success).toBe(false);
+    expect(parsed.error?.issues.map((issue) => issue.path[0])).toContain('sessionExchangeEnabled');
+  });
+
+  it('can be named on an update', () => {
+    expect(OidcApplicationUpdateRequestSchema.parse({ sessionExchangeEnabled: false })).toEqual({
+      sessionExchangeEnabled: false,
+    });
+  });
+});
