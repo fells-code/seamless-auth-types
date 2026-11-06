@@ -149,6 +149,10 @@ export type AuthMessageResponse = z.infer<typeof AuthMessageResponseSchema>;
 export const SeamlessAuthUserSchema = z.object({
   id: z.string(),
   roles: z.array(z.string()),
+  permissions: z.array(z.string()).optional(),
+  organizationId: z.string().nullable().optional(),
+  organizationRoles: z.array(z.string()).optional(),
+  organizationPermissions: z.array(z.string()).optional(),
   email: z.string().optional(),
   phone: z.string().nullable().optional(),
   iat: z.number().optional(),

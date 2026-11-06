@@ -15,6 +15,14 @@ export const MeUserSchema = z.object({
   roles: z.array(RoleNameSchema),
   lastLogin: IsoDate.nullable().optional(),
   activeOrganizationId: z.string().nullable().optional(),
+  /**
+   * For a cookie client, which cannot read its access token. Optional because an older API
+   * does not send them, so absence means unknown rather than none. For showing and hiding UI
+   * only: the server still has to enforce.
+   */
+  permissions: z.array(z.string()).optional(),
+  organizationRoles: z.array(z.string()).optional(),
+  organizationPermissions: z.array(z.string()).optional(),
 });
 
 export type MeUser = z.infer<typeof MeUserSchema>;
