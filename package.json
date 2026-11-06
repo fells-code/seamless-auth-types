@@ -19,6 +19,14 @@
     "./role/matching": {
       "types": "./dist/schemas/role/matching.d.ts",
       "import": "./dist/schemas/role/matching.js"
+    },
+    "./permission": {
+      "types": "./dist/schemas/permission/schema.d.ts",
+      "import": "./dist/schemas/permission/schema.js"
+    },
+    "./permission/matching": {
+      "types": "./dist/schemas/permission/matching.d.ts",
+      "import": "./dist/schemas/permission/matching.js"
     }
   },
   "sideEffects": false,

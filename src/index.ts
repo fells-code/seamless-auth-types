@@ -2,6 +2,7 @@ export * from './shared.js';
 
 export * from './schemas/common/schema.js';
 export * from './schemas/role/schema.js';
+export * from './schemas/permission/schema.js';
 export * from './schemas/user/schema.js';
 export * from './schemas/credential/schema.js';
 export * from './schemas/session/schema.js';
