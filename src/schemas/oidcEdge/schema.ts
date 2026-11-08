@@ -197,12 +197,19 @@ export const OidcSignResponseSchema = z.object({
 
 export type OidcSignResponse = z.infer<typeof OidcSignResponseSchema>;
 
+/**
+ * `claims_mismatch`: the account claims in the signing input are not what the API computes for
+ * the session and client now. A role or membership can change between the edge's account read
+ * and its sign, so the edge reads the account again and retries once. An older edge does not
+ * parse it and fails the sign as it did for the `subject_mismatch` this replaced.
+ */
 export const OidcSignRefusalCodeSchema = z.enum([
   'malformed_signing_input',
   'unknown_key',
   'session_revoked',
   'subject_mismatch',
   'auth_context_mismatch',
+  'claims_mismatch',
   'issuer_mismatch',
   'audience_mismatch',
   'client_inactive',

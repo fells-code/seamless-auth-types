@@ -150,6 +150,12 @@ describe('OidcSignRefusalSchema', () => {
     expect(() => OidcSignRefusalSchema.parse({ error: 'session_revoked' })).not.toThrow();
     expect(() => OidcSignRefusalSchema.parse({ error: 'nope' })).toThrow();
   });
+
+  it('carries claims_mismatch, which tells the edge to read the account again', () => {
+    expect(OidcSignRefusalSchema.parse({ error: 'claims_mismatch' })).toEqual({
+      error: 'claims_mismatch',
+    });
+  });
 });
 
 describe('OidcJwksResponseSchema', () => {
