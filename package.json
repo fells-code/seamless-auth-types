@@ -27,6 +27,14 @@
     "./permission/matching": {
       "types": "./dist/schemas/permission/matching.d.ts",
       "import": "./dist/schemas/permission/matching.js"
+    },
+    "./webhook/constants": {
+      "types": "./dist/schemas/webhook/constants.d.ts",
+      "import": "./dist/schemas/webhook/constants.js"
+    },
+    "./customClaim/reserved": {
+      "types": "./dist/schemas/customClaim/reserved.d.ts",
+      "import": "./dist/schemas/customClaim/reserved.js"
     }
   },
   "sideEffects": false,
