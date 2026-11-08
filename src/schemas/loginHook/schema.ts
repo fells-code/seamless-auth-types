@@ -143,6 +143,24 @@ export const PreTokenHookResultSchema = z.object({
 
 export type PreTokenHookResult = z.infer<typeof PreTokenHookResultSchema>;
 
+/**
+ * The 403 a sign-in answers when a hook denies it. `message` is the hook's `userMessage`, for the
+ * sign-in screen; the hook's `reason` is only audited.
+ */
+export const LoginDeniedErrorSchema = z.object({
+  error: z.literal('login_denied'),
+  message: z.string().optional(),
+});
+
+export type LoginDeniedError = z.infer<typeof LoginDeniedErrorSchema>;
+
+/** The 503 a sign-in answers when a `closed` hook fails. */
+export const LoginHookUnavailableErrorSchema = z.object({
+  error: z.literal('login_hook_unavailable'),
+});
+
+export type LoginHookUnavailableError = z.infer<typeof LoginHookUnavailableErrorSchema>;
+
 export const LoginHookOutcomeSchema = z.enum(['allowed', 'denied', 'failed_open', 'failed_closed']);
 
 export type LoginHookOutcome = z.infer<typeof LoginHookOutcomeSchema>;

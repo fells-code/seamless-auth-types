@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  OidcAccountClaimsSchema,
   OidcAccountQuerySchema,
   OidcAuthContextSchema,
   OidcClientMetadataSchema,
@@ -148,6 +149,12 @@ describe('OidcSignRefusalSchema', () => {
   it('only carries known refusal codes', () => {
     expect(() => OidcSignRefusalSchema.parse({ error: 'session_revoked' })).not.toThrow();
     expect(() => OidcSignRefusalSchema.parse({ error: 'nope' })).toThrow();
+  });
+
+  it('carries claims_mismatch, which tells the edge to read the account again', () => {
+    expect(OidcSignRefusalSchema.parse({ error: 'claims_mismatch' })).toEqual({
+      error: 'claims_mismatch',
+    });
   });
 });
 
@@ -330,5 +337,41 @@ describe('OidcPayloadConsumeResponseSchema', () => {
       consumed: false,
     });
     expect(() => OidcPayloadConsumeResponseSchema.parse({})).toThrow();
+  });
+});
+
+describe('OidcAccountClaimsSchema', () => {
+  const base = { sub: 'user_1', roles: ['user'], org_id: null };
+
+  it('reads an API older than the authorization claims, with no custom claims', () => {
+    expect(OidcAccountClaimsSchema.parse(base)).toEqual({ ...base, customClaims: {} });
+  });
+
+  it('keeps the permission claims and the custom claims', () => {
+    const account = {
+      ...base,
+      org_id: 'org_1',
+      permissions: ['invoices:read'],
+      org_roles: ['billing'],
+      org_permissions: ['invoices:write'],
+      customClaims: { tenant: 'acme', limits: { seats: 10 } },
+    };
+    expect(OidcAccountClaimsSchema.parse(account)).toEqual(account);
+  });
+
+  it('marks omitted permissions only with true', () => {
+    expect(OidcAccountClaimsSchema.parse({ ...base, permissions_omitted: true })).toMatchObject({
+      permissions_omitted: true,
+    });
+    expect(() => OidcAccountClaimsSchema.parse({ ...base, permissions_omitted: false })).toThrow();
+  });
+
+  it('holds custom claim values to the custom claim rules', () => {
+    expect(() =>
+      OidcAccountClaimsSchema.parse({ ...base, customClaims: { deep: [[[['x']]]] } }),
+    ).toThrow();
+    expect(() =>
+      OidcAccountClaimsSchema.parse({ ...base, customClaims: { n: Number.NaN } }),
+    ).toThrow();
   });
 });

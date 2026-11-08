@@ -39,9 +39,14 @@ export type CalloutUrl = z.infer<typeof CalloutUrlSchema>;
  * Why a callout failed, as shown to administrators. Deliberately coarse: the resolved address
  * and the socket's own error text are never shown, so a delivery log cannot be used to map the
  * network the API runs on.
+ *
+ * `refused` means the API would not connect to the destination's address. `misconfigured`
+ * means the destination's own configuration cannot be used, such as a secret it names that the
+ * server does not have, so no call was attempted.
  */
 export const CalloutFailureSchema = z.enum([
   'refused',
+  'misconfigured',
   'timed_out',
   'connection_failed',
   'http_status',

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   LOGIN_HOOK_MAX_TIMEOUT_MS,
+  LoginDeniedErrorSchema,
+  LoginHookUnavailableErrorSchema,
   LoginHookCallSchema,
   PostLoginHookResultSchema,
   PreTokenHookResultSchema,
@@ -78,5 +80,24 @@ describe('LoginHookCallSchema', () => {
     expect(Object.keys(call).sort()).toEqual(
       ['client', 'id', 'method', 'organization', 'request', 'timestamp', 'trigger', 'user'].sort(),
     );
+  });
+});
+
+describe('sign-in refusals', () => {
+  it('carries the hook message on a denial, when there is one', () => {
+    expect(LoginDeniedErrorSchema.parse({ error: 'login_denied' })).toEqual({
+      error: 'login_denied',
+    });
+    expect(
+      LoginDeniedErrorSchema.parse({ error: 'login_denied', message: 'Ask your admin.' }),
+    ).toEqual({ error: 'login_denied', message: 'Ask your admin.' });
+    expect(() => LoginDeniedErrorSchema.parse({ error: 'login_hook_unavailable' })).toThrow();
+  });
+
+  it('names an unavailable hook', () => {
+    expect(LoginHookUnavailableErrorSchema.parse({ error: 'login_hook_unavailable' })).toEqual({
+      error: 'login_hook_unavailable',
+    });
+    expect(() => LoginHookUnavailableErrorSchema.parse({ error: 'login_denied' })).toThrow();
   });
 });

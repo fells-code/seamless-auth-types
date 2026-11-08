@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CustomClaimValueSchema } from '../customClaim/schema.js';
 import { HostedUiSchema } from '../systemConfig/schema.js';
 
 /**
@@ -196,12 +197,19 @@ export const OidcSignResponseSchema = z.object({
 
 export type OidcSignResponse = z.infer<typeof OidcSignResponseSchema>;
 
+/**
+ * `claims_mismatch`: the account claims in the signing input are not what the API computes for
+ * the session and client now. A role or membership can change between the edge's account read
+ * and its sign, so the edge reads the account again and retries once. An older edge does not
+ * parse it and fails the sign as it did for the `subject_mismatch` this replaced.
+ */
 export const OidcSignRefusalCodeSchema = z.enum([
   'malformed_signing_input',
   'unknown_key',
   'session_revoked',
   'subject_mismatch',
   'auth_context_mismatch',
+  'claims_mismatch',
   'issuer_mismatch',
   'audience_mismatch',
   'client_inactive',
@@ -357,7 +365,15 @@ export const OidcSessionQuerySchema = z.object({
 
 export type OidcSessionQuery = z.infer<typeof OidcSessionQuerySchema>;
 
-/** Every claim the account has. The edge releases them by scope. */
+/**
+ * Every claim the account has. The edge releases them by scope.
+ *
+ * The permission claims (API ADR 0004) carry their token names and are computed for the session
+ * and client. `customClaims` are the merged custom claims (API ADR 0005), kept apart from the
+ * standard claims so none can stand in for one. The API holds all of them to the shared claims
+ * budget: over it, `permissions` gives way to `permissions_omitted` first. An API older than
+ * these claims omits them, so `customClaims` defaults to empty.
+ */
 export const OidcAccountClaimsSchema = z.object({
   sub: z.string(),
   email: z.string().optional(),
@@ -366,6 +382,11 @@ export const OidcAccountClaimsSchema = z.object({
   phone_number_verified: z.boolean().optional(),
   roles: z.array(z.string()),
   org_id: z.string().nullable(),
+  permissions: z.array(z.string()).optional(),
+  permissions_omitted: z.literal(true).optional(),
+  org_roles: z.array(z.string()).optional(),
+  org_permissions: z.array(z.string()).optional(),
+  customClaims: z.record(z.string(), CustomClaimValueSchema).default({}),
 });
 
 export type OidcAccountClaims = z.infer<typeof OidcAccountClaimsSchema>;
