@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CustomClaimValueSchema } from '../customClaim/schema.js';
 import { HostedUiSchema } from '../systemConfig/schema.js';
 
 /**
@@ -357,7 +358,15 @@ export const OidcSessionQuerySchema = z.object({
 
 export type OidcSessionQuery = z.infer<typeof OidcSessionQuerySchema>;
 
-/** Every claim the account has. The edge releases them by scope. */
+/**
+ * Every claim the account has. The edge releases them by scope.
+ *
+ * The permission claims (API ADR 0004) carry their token names and are computed for the session
+ * and client. `customClaims` are the merged custom claims (API ADR 0005), kept apart from the
+ * standard claims so none can stand in for one. The API holds all of them to the shared claims
+ * budget: over it, `permissions` gives way to `permissions_omitted` first. An API older than
+ * these claims omits them, so `customClaims` defaults to empty.
+ */
 export const OidcAccountClaimsSchema = z.object({
   sub: z.string(),
   email: z.string().optional(),
@@ -366,6 +375,11 @@ export const OidcAccountClaimsSchema = z.object({
   phone_number_verified: z.boolean().optional(),
   roles: z.array(z.string()),
   org_id: z.string().nullable(),
+  permissions: z.array(z.string()).optional(),
+  permissions_omitted: z.literal(true).optional(),
+  org_roles: z.array(z.string()).optional(),
+  org_permissions: z.array(z.string()).optional(),
+  customClaims: z.record(z.string(), CustomClaimValueSchema).default({}),
 });
 
 export type OidcAccountClaims = z.infer<typeof OidcAccountClaimsSchema>;

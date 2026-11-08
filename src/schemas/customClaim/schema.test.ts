@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import {
+  CUSTOM_CLAIM_MAX_DEPTH,
   CUSTOM_CLAIMS_BUDGET_BYTES,
+  CustomClaimListResponseSchema,
   CustomClaimNameSchema,
   CustomClaimSourceParamSchema,
+  CustomClaimValueSchema,
   RESERVED_CLAIM_NAMES,
   SetCustomClaimsRequestSchema,
   claimValueDepth,
@@ -78,6 +81,52 @@ describe('claim sets', () => {
   it('refuses a value nested four levels deep', () => {
     expect(() =>
       SetCustomClaimsRequestSchema.parse({ claims: { deep: { a: { b: { c: { d: 1 } } } } } }),
+    ).toThrow();
+  });
+
+  it('holds values to exactly CUSTOM_CLAIM_MAX_DEPTH, in arrays and objects alike', () => {
+    const nested = (depth: number, wrap: (inner: unknown) => unknown): unknown =>
+      depth === 0 ? 'leaf' : wrap(nested(depth - 1, wrap));
+    for (const wrap of [(inner: unknown) => [inner], (inner: unknown) => ({ k: inner })]) {
+      const atLimit = nested(CUSTOM_CLAIM_MAX_DEPTH, wrap);
+      const overLimit = nested(CUSTOM_CLAIM_MAX_DEPTH + 1, wrap);
+      expect(CustomClaimValueSchema.parse(atLimit)).toEqual(atLimit);
+      const result = CustomClaimValueSchema.safeParse(overLimit);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.message).toBe(
+        `must not nest deeper than ${CUSTOM_CLAIM_MAX_DEPTH} levels`,
+      );
+    }
+  });
+
+  it.each([null, true, 0, -1.5, '', 'x', [], {}, [1, 'a', null, { b: [false] }]])(
+    'accepts the JSON value %j',
+    (value) => {
+      expect(CustomClaimValueSchema.parse(value)).toEqual(value);
+    },
+  );
+
+  it.each([undefined, Number.POSITIVE_INFINITY, 1n, () => 1, new Map(), [undefined]])(
+    'refuses the non-JSON value %s',
+    (value) => {
+      expect(CustomClaimValueSchema.safeParse(value).success).toBe(false);
+    },
+  );
+
+  it('reads stored sources with the same value rules', () => {
+    const source = {
+      sourceKind: 'instance_role',
+      sourceName: 'admin',
+      claims: { tenant: 'acme', limits: { seats: 10 } },
+      updatedAt: new Date().toISOString(),
+    };
+    const list = { sources: [source], reservedNames: [], reservedPrefixes: [], budgetBytes: 1024 };
+    expect(CustomClaimListResponseSchema.parse(list)).toEqual(list);
+    expect(() =>
+      CustomClaimListResponseSchema.parse({
+        ...list,
+        sources: [{ ...source, claims: { when: new Date() } }],
+      }),
     ).toThrow();
   });
 

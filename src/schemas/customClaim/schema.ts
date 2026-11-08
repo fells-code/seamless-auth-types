@@ -37,12 +37,26 @@ export const CustomClaimNameSchema = z
 
 export type CustomClaimName = z.infer<typeof CustomClaimNameSchema>;
 
-export const CustomClaimValueSchema = z
-  .json()
-  .refine(
-    (value) => claimValueDepth(value) <= CUSTOM_CLAIM_MAX_DEPTH,
-    `must not nest deeper than ${CUSTOM_CLAIM_MAX_DEPTH} levels`,
-  );
+const scalar = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
+function nest<T extends z.ZodType>(inner: T) {
+  return z.union([scalar, z.array(inner), z.record(z.string(), inner)]);
+}
+
+/**
+ * Any JSON value nesting at most `CUSTOM_CLAIM_MAX_DEPTH` levels, spelled out level by level
+ * rather than with `z.json()`. A recursive schema overflows the stack of OpenAPI generators
+ * such as `@asteasolutions/zod-to-openapi`.
+ */
+export const CustomClaimValueSchema = z.union(
+  [scalar, z.array(nest(nest(scalar))), z.record(z.string(), nest(nest(scalar)))],
+  {
+    error: (issue) =>
+      claimValueDepth(issue.input) > CUSTOM_CLAIM_MAX_DEPTH
+        ? `must not nest deeper than ${CUSTOM_CLAIM_MAX_DEPTH} levels`
+        : undefined,
+  },
+);
 
 export type CustomClaimValue = z.infer<typeof CustomClaimValueSchema>;
 
@@ -74,7 +88,7 @@ export type SetCustomClaimsRequest = z.infer<typeof SetCustomClaimsRequestSchema
 export const CustomClaimSourceSchema = z.object({
   sourceKind: CustomClaimSourceKindSchema,
   sourceName: z.string(),
-  claims: z.record(z.string(), z.json()),
+  claims: z.record(z.string(), CustomClaimValueSchema),
   updatedAt: IsoDate,
 });
 

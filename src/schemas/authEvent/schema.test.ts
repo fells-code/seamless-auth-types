@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { AuthEventQuerySchema, AuthEventSchema } from './schema.js';
+import {
+  AUTH_EVENT_TYPES,
+  AuthEventQuerySchema,
+  AuthEventSchema,
+  AuthEventTypeEnum,
+} from './schema.js';
 
 const now = new Date().toISOString();
 
@@ -202,5 +207,20 @@ describe('AuthEventQuerySchema session filter', () => {
 
   it('leaves the session filter unset when absent', () => {
     expect(AuthEventQuerySchema.parse({}).sessionId).toBeUndefined();
+  });
+});
+
+describe('AUTH_EVENT_TYPES', () => {
+  it('stays sorted and free of duplicates', () => {
+    expect([...new Set(AUTH_EVENT_TYPES)].sort()).toEqual([...AUTH_EVENT_TYPES]);
+  });
+
+  it.each([
+    'admin_oidc_application_link_added',
+    'admin_oidc_application_link_removed',
+    'custom_claims_omitted',
+    'session_created',
+  ])('lists %j, which the API writes', (type) => {
+    expect(AuthEventTypeEnum.parse(type)).toBe(type);
   });
 });
