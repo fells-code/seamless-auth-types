@@ -140,12 +140,14 @@ unless one of the subpath exports below fits better.
 
 ### Subpath exports
 
-| Subpath                                    | Covers                                                             |
-| ------------------------------------------ | ------------------------------------------------------------------ |
-| `@seamless-auth/types/role`                | Role name schema plus the matchers                                 |
-| `@seamless-auth/types/role/matching`       | The matchers alone, with no Zod import                             |
-| `@seamless-auth/types/permission`          | Permission, role mapping and token claim schemas plus the matchers |
-| `@seamless-auth/types/permission/matching` | The permission matchers alone, with no Zod import                  |
+| Subpath                                     | Covers                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| `@seamless-auth/types/role`                 | Role name schema plus the matchers                                 |
+| `@seamless-auth/types/role/matching`        | The matchers alone, with no Zod import                             |
+| `@seamless-auth/types/permission`           | Permission, role mapping and token claim schemas plus the matchers |
+| `@seamless-auth/types/permission/matching`  | The permission matchers alone, with no Zod import                  |
+| `@seamless-auth/types/webhook/constants`    | Webhook header names, replay tolerance and retry schedule, no Zod  |
+| `@seamless-auth/types/customClaim/reserved` | Reserved claim names and the custom claims budget, no Zod          |
 
 ## Conventions
 

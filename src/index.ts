@@ -26,3 +26,8 @@ export * from './schemas/oidcEdge/schema.js';
 export * from './schemas/oidc/schema.js';
 export * from './schemas/oidcApplication/schema.js';
 export * from './schemas/applicationNotice/schema.js';
+export * from './schemas/callout/schema.js';
+export * from './schemas/webhook/schema.js';
+export * from './schemas/loginHook/schema.js';
+export * from './schemas/customClaim/schema.js';
+export * from './schemas/auditSink/schema.js';
