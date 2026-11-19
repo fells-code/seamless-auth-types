@@ -12,7 +12,7 @@ import { HostedUiSchema } from '../systemConfig/schema.js';
  * Bump when a change here needs both sides to move together. The edge refuses to start
  * against an API that reports a different value.
  */
-export const OIDC_EDGE_CONTRACT_VERSION = 3;
+export const OIDC_EDGE_CONTRACT_VERSION = 4;
 
 export const OidcEdgeRoutes = {
   config: '/oidc/config',
@@ -141,9 +141,8 @@ export const OidcSignKindSchema = z.enum(['id_token', 'access_token', 'client_cr
 export type OidcSignKind = z.infer<typeof OidcSignKindSchema>;
 
 /**
- * The grant a user token's authorization was made with. A refresh names the grant it
- * continues, so tokens refreshed from a device approval still say device code: the API
- * never signs `acr` into those (ADR 0001, D10).
+ * The grant a user's sign-in was made with. A refresh continues one of these, and the API
+ * never signs `acr` into a token that continues a device approval (ADR 0001, D10).
  */
 export const OidcUserGrantTypeSchema = z.enum([
   'authorization_code',
@@ -151,6 +150,14 @@ export const OidcUserGrantTypeSchema = z.enum([
 ]);
 
 export type OidcUserGrantType = z.infer<typeof OidcUserGrantTypeSchema>;
+
+/** The grant of the token request a user token is signed for, as the client sent it. */
+export const OidcSignGrantTypeSchema = z.enum([
+  ...OidcUserGrantTypeSchema.options,
+  'refresh_token',
+]);
+
+export type OidcSignGrantType = z.infer<typeof OidcSignGrantTypeSchema>;
 
 /**
  * `signingInput` is the JWS signing input the library hands an external key: the base64url
@@ -163,19 +170,30 @@ export const OidcSignRequestSchema = z
     kid: z.string().min(1),
     clientId: z.string().min(1),
     sessionId: z.string().min(1).optional(),
-    grantType: OidcUserGrantTypeSchema.optional(),
+    grantType: OidcSignGrantTypeSchema.optional(),
+    /** The sign-in grant a `refresh_token` request continues, and only then. */
+    originGrantType: OidcUserGrantTypeSchema.optional(),
     signingInput: z.string().regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/),
   })
   .superRefine((value, ctx) => {
     if (value.kind === 'client_credentials') {
-      if (value.grantType) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['grantType'],
-          message: 'grantType is only for user tokens',
-        });
+      for (const key of ['grantType', 'originGrantType'] as const) {
+        if (value[key]) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [key],
+            message: `${key} is only for user tokens`,
+          });
+        }
       }
       return;
+    }
+    if ((value.grantType === 'refresh_token') !== Boolean(value.originGrantType)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['originGrantType'],
+        message: 'originGrantType is required for refresh_token, and only for it',
+      });
     }
     for (const key of ['sessionId', 'grantType'] as const) {
       if (!value[key]) {

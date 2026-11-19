@@ -108,7 +108,7 @@ describe('OidcSignRequestSchema', () => {
         grantType: 'urn:ietf:params:oauth:grant-type:device_code',
       }),
     ).not.toThrow();
-    expect(() => OidcSignRequestSchema.parse({ ...user, grantType: 'refresh_token' })).toThrow();
+    expect(() => OidcSignRequestSchema.parse({ ...user, grantType: 'password' })).toThrow();
     expect(() =>
       OidcSignRequestSchema.parse({
         kind: 'client_credentials',
@@ -118,6 +118,49 @@ describe('OidcSignRequestSchema', () => {
         signingInput,
       }),
     ).toThrow(/grantType/);
+  });
+
+  it('names the sign-in grant a refresh continues, and only for a refresh', () => {
+    const user = {
+      kind: 'access_token',
+      kid: 'k1',
+      clientId: 'app',
+      sessionId: 's1',
+      signingInput,
+    };
+    const device = 'urn:ietf:params:oauth:grant-type:device_code';
+
+    for (const originGrantType of ['authorization_code', device]) {
+      expect(
+        OidcSignRequestSchema.parse({ ...user, grantType: 'refresh_token', originGrantType }),
+      ).toMatchObject({ grantType: 'refresh_token', originGrantType });
+    }
+    expect(() => OidcSignRequestSchema.parse({ ...user, grantType: 'refresh_token' })).toThrow(
+      /originGrantType/,
+    );
+    expect(() =>
+      OidcSignRequestSchema.parse({
+        ...user,
+        grantType: 'refresh_token',
+        originGrantType: 'refresh_token',
+      }),
+    ).toThrow();
+    expect(() =>
+      OidcSignRequestSchema.parse({
+        ...user,
+        grantType: 'authorization_code',
+        originGrantType: 'authorization_code',
+      }),
+    ).toThrow(/originGrantType/);
+    expect(() =>
+      OidcSignRequestSchema.parse({
+        kind: 'client_credentials',
+        kid: 'k1',
+        clientId: 'svc',
+        originGrantType: 'authorization_code',
+        signingInput,
+      }),
+    ).toThrow(/originGrantType/);
   });
 
   it('accepts client credentials without a session', () => {
