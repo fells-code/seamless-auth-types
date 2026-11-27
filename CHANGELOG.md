@@ -1,5 +1,11 @@
 # @seamless-auth/types
 
+## 0.41.0
+
+### Minor Changes
+
+- 6a78488: The OIDC edge contract is now version 4. `OidcSignRequestSchema` takes the grant of the token request itself: `grantType` adds `refresh_token`, and a refresh names the sign-in grant it continues in the new `originGrantType` (required for `refresh_token`, refused otherwise). `OidcSignGrantTypeSchema` is exported. An edge and an API on different contract versions refuse to run together, so upgrade both.
+
 ## 0.40.0
 
 ### Minor Changes
